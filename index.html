@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f1a14">
 <title>Cricket Captain — Fielding Planner</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -29,7 +32,8 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  input, textarea, select { -webkit-user-select: text; user-select: text; }
 
   /* Layout */
   .app { display: grid; grid-template-columns: 340px 1fr 300px; grid-template-rows: auto 1fr; height: 100vh; overflow: hidden; }
@@ -85,6 +89,9 @@
   .field-token circle.bg { transition: r 0.15s, opacity 0.15s; }
   .field-token:hover circle.bg { r: 18; }
   .field-token.dragging-over circle.bg { r: 20; opacity: 0.9; }
+
+  /* Mobile controls - HIDDEN on desktop */
+  .mobile-controls { display: none; }
 
   /* Right panel */
   .right-panel { background: var(--surface); border-left: 1px solid var(--border); overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
@@ -147,9 +154,181 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
+  /* ═══════════════════════════════════════════════════════════════════════════════ */
+  /* MOBILE RESPONSIVE DESIGN (max-width: 1024px) */
+  /* ═══════════════════════════════════════════════════════════════════════════════ */
+
+  @media (max-width: 1024px) {
+    /* Mobile layout: stacked columns */
+    .app { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr auto; }
+    
+    /* Hide left/right panels by default, show as tabs */
+    .left-panel { 
+      grid-column: 1; 
+      border-right: none; 
+      border-top: 1px solid var(--border);
+      max-height: 35vh;
+      overflow-y: auto;
+      display: none;
+      padding: 16px;
+      gap: 12px;
+    }
+    
+    .right-panel { 
+      grid-column: 1; 
+      border-left: none; 
+      border-top: 1px solid var(--border);
+      max-height: 0;
+      overflow: hidden;
+      padding: 0;
+      display: none;
+    }
+    
+    .field-area { 
+      grid-column: 1; 
+      grid-row: 3;
+      padding: 8px;
+    }
+    
+    .field-svg { 
+      max-width: 100%;
+      max-height: 60vh;
+      width: auto;
+      height: auto;
+    }
+
+    /* Mobile controls bar - VISIBLE on mobile */
+    .mobile-controls { 
+      grid-row: 4;
+      display: flex !important;
+      gap: 6px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 8px;
+      justify-content: space-around;
+    }
+    
+    .mobile-tab-btn {
+      flex: 1;
+      padding: 10px 8px;
+      font-size: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-weight: 500;
+    }
+    
+    .mobile-tab-btn:active { background: rgba(212,160,23,0.15); }
+    .mobile-tab-btn.active { background: var(--gold); color: #0f1a14; border-color: var(--gold); }
+
+    /* Show panels when active */
+    .left-panel.show { display: flex; }
+    .right-panel.show { display: flex; max-height: 40vh; padding: 16px; border-top: 1px solid var(--border); gap: 12px; overflow-y: auto; flex-direction: column; }
+
+    /* Header adjustments */
+    header { padding: 10px 12px; }
+    .logo { font-size: 16px; }
+    .logo span { font-size: 11px; }
+    .header-actions button { padding: 5px 10px; font-size: 12px; }
+
+    /* Panel adjustments */
+    .panel-title { font-size: 13px; margin-bottom: 6px; padding-bottom: 6px; }
+    label { font-size: 11px; margin-bottom: 3px; }
+    input, select, textarea { font-size: 14px; padding: 10px 8px; }
+    
+    /* Touch-friendly button sizes */
+    .btn { padding: 10px 14px; font-size: 12px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+    .btn-primary { min-height: 44px; }
+    
+    /* Setup grid mobile */
+    .setup-grid, .row2 { grid-template-columns: 1fr; }
+    
+    /* Player list mobile */
+    .player-list { max-height: 200px; }
+    .player-card { padding: 8px 10px; font-size: 12px; }
+    .player-name { font-size: 12px; }
+    .player-meta { font-size: 10px; }
+
+    /* Preset grid mobile */
+    .preset-grid { grid-template-columns: 1fr 1fr; gap: 5px; }
+    .preset-btn { padding: 10px; font-size: 12px; min-height: 40px; }
+
+    /* Analytics mobile */
+    .analytics-grid { gap: 6px; }
+    .metric-card { padding: 10px; }
+    .metric-val { font-size: 18px; }
+    .metric-label { font-size: 10px; }
+
+    /* Bowling plan mobile */
+    .bowling-plan { gap: 4px; }
+    .bowl-row { font-size: 11px; gap: 4px; }
+    .bowl-icon { width: 20px; height: 20px; font-size: 9px; }
+
+    /* Zone breakdown mobile */
+    .zone-row { padding: 4px 0; font-size: 11px; }
+
+    /* Batting indicator */
+    .batsman-indicator { font-size: 11px; gap: 4px; }
+    .bat-chip { font-size: 10px; padding: 2px 6px; }
+
+    /* Modal adjustments */
+    .modal { min-width: 90vw; max-width: 95vw; }
+
+    /* Tooltip mobile */
+    .tooltip { font-size: 11px; padding: 6px 10px; }
+
+    /* Saves list mobile */
+    .save-item { font-size: 11px; padding: 8px; }
+    .saves-list { max-height: 100px; }
+
+    /* Tactic badges */
+    .tactic-badge { font-size: 9px; padding: 2px 6px; }
+
+    /* Legend hidden on mobile to save space */
+    .field-area > div:last-child { display: none; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════════ */
+  /* SMALL MOBILE (max-width: 480px) */
+  /* ═══════════════════════════════════════════════════════════════════════════════ */
+  
+  @media (max-width: 480px) {
+    header { padding: 8px 10px; }
+    .logo { font-size: 14px; }
+    .logo span { font-size: 10px; }
+    
+    .header-actions button { padding: 4px 8px; font-size: 11px; }
+    
+    .field-svg { max-height: 50vh; }
+    
+    .mobile-tab-btn { padding: 8px 6px; font-size: 11px; }
+    
+    input, select, textarea { font-size: 16px; } /* Prevent zoom on iOS */
+    
+    .left-panel { max-height: 40vh; padding: 12px; gap: 10px; }
+    .right-panel { max-height: 45vh; padding: 12px; }
+    
+    .preset-grid { grid-template-columns: 1fr; }
+    .preset-btn { min-height: 38px; font-size: 11px; }
+    
+    .setup-grid { row-gap: 8px; }
+    
+    .player-list { max-height: 150px; }
+    .player-card { padding: 6px 8px; }
+    
+    .metric-val { font-size: 16px; }
+
+    /* Improve touch targets */
+    .btn { min-height: 48px; }
+    .field-token circle.bg { transition: r 0.12s, opacity 0.12s; }
+  }
+
   /* Print */
   @media print {
-    .left-panel, .right-panel, header .header-actions { display: none; }
+    .left-panel, .right-panel, header .header-actions, .mobile-controls { display: none; }
     .app { display: block; }
     .field-area { width: 100%; height: 100vh; background: white; }
     .field-svg { width: 80vmin; height: 80vmin; }
@@ -513,6 +692,13 @@
       <div class="panel-title">Placed Players</div>
       <div id="placedSummary" style="font-size:12px;color:var(--muted)">No players placed yet.</div>
     </div>
+  </div>
+
+  <!-- Mobile Controls Bar -->
+  <div class="mobile-controls">
+    <button class="mobile-tab-btn active" onclick="showMobileTab('field')">🏏 Field</button>
+    <button class="mobile-tab-btn" onclick="showMobileTab('squad')">👥 Squad</button>
+    <button class="mobile-tab-btn" onclick="showMobileTab('analytics')">📊 Analytics</button>
   </div>
 </div>
 
@@ -1243,6 +1429,61 @@ function exportPNG() {
 }
 
 function printField() { window.print(); }
+
+// ─── Mobile UI ────────────────────────────────────────────────────────────────
+function isMobile() {
+  return window.innerWidth <= 1024;
+}
+
+function initMobileUI() {
+  if (!isMobile()) return;
+  
+  const leftPanel = document.querySelector('.left-panel');
+  if (leftPanel && !leftPanel.classList.contains('show')) {
+    leftPanel.classList.add('show');
+  }
+}
+
+function showMobileTab(tab) {
+  const leftPanel = document.querySelector('.left-panel');
+  const rightPanel = document.querySelector('.right-panel');
+  const buttons = document.querySelectorAll('.mobile-tab-btn');
+  
+  if (!leftPanel || !rightPanel) return;
+  
+  // Remove active class from all buttons
+  buttons.forEach(btn => btn.classList.remove('active'));
+  
+  // Hide all panels
+  leftPanel.classList.remove('show');
+  rightPanel.classList.remove('show');
+  
+  // Show selected tab and mark button as active
+  if (tab === 'squad') {
+    leftPanel.classList.add('show');
+    if (buttons[1]) buttons[1].classList.add('active');
+  } else if (tab === 'analytics') {
+    rightPanel.classList.add('show');
+    if (buttons[2]) buttons[2].classList.add('active');
+  } else {
+    // Field tab - just show the field
+    if (buttons[0]) buttons[0].classList.add('active');
+  }
+}
+
+// Initialize mobile UI on load and resize
+document.addEventListener('DOMContentLoaded', initMobileUI);
+window.addEventListener('resize', () => {
+  if (isMobile()) {
+    // Reinitialize on resize to mobile
+  } else {
+    // Reset to desktop when resizing to desktop
+    const leftPanel = document.querySelector('.left-panel');
+    const rightPanel = document.querySelector('.right-panel');
+    if (leftPanel) leftPanel.classList.remove('show');
+    if (rightPanel) rightPanel.classList.remove('show');
+  }
+});
 </script>
 </body>
 </html>
