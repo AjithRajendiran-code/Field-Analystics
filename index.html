@@ -2,1488 +2,585 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0f1a14">
-<title>Arun's Fielding Board — Tactical Planner</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fielding Positions Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --green-field: #2d6a4f;
-    --green-inner: #1b4332;
-    --green-pitch: #4a7c59;
-    --cream: #f7f3e9;
-    --gold: #d4a017;
-    --red-ball: #c0392b;
-    --blue-acc: #1a4f8a;
-    --bg: #0f1a14;
-    --surface: #1a2b21;
-    --surface2: #243320;
-    --border: rgba(212,160,23,0.25);
-    --text: #f0ebe0;
-    --muted: #8a9b82;
-    --danger: #e05c5c;
-    --warn: #e8a020;
-    --success: #3eb57a;
-    --font: 'IBM Plex Sans', sans-serif;
-    --serif: 'DM Serif Display', serif;
-    --mono: 'IBM Plex Mono', monospace;
+    --bg: #102019;
+    --panel: #182a21;
+    --panel-2: #21362a;
+    --field-outer: #25523b;
+    --field-inner: #2f6b4d;
+    --accent: #d8ab2f;
+    --text: #eff5ed;
+    --muted: #9caf9f;
+    --border: rgba(216, 171, 47, 0.28);
+    --token: #f4f7ef;
+    --wk: #efba42;
+    --danger: #dd6b6b;
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-  input, textarea, select { -webkit-user-select: text; user-select: text; }
-
-  /* Layout */
-  .app { display: grid; grid-template-columns: 340px 1fr 300px; grid-template-rows: auto 1fr; height: 100vh; overflow: hidden; }
-  header { grid-column: 1/-1; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; }
-  .logo { font-family: var(--serif); font-size: 22px; color: var(--gold); letter-spacing: 0.5px; }
-  .logo span { color: var(--muted); font-size: 13px; font-family: var(--font); display: block; margin-top: 2px; }
-  .header-actions { display: flex; gap: 10px; }
-  .btn { font-family: var(--font); font-size: 13px; font-weight: 500; border: 1px solid var(--border); background: transparent; color: var(--text); padding: 7px 16px; border-radius: 6px; cursor: pointer; transition: all 0.18s; }
-  .btn:hover { background: rgba(212,160,23,0.12); border-color: var(--gold); color: var(--gold); }
-  .btn-primary { background: var(--gold); color: #0f1a14; border-color: var(--gold); }
-  .btn-primary:hover { background: #e8b020; color: #0f1a14; }
-  .btn-danger { border-color: var(--danger); color: var(--danger); }
-  .btn-danger:hover { background: rgba(224,92,92,0.12); }
-
-  /* Left panel */
-  .left-panel { background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
-  .panel-title { font-family: var(--serif); font-size: 15px; color: var(--gold); margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-
-  /* Match setup */
-  .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
-  input, select, textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-family: var(--font); font-size: 13px; padding: 8px 10px; border-radius: 6px; outline: none; transition: border 0.15s; }
-  input:focus, select:focus, textarea:focus { border-color: var(--gold); }
-  select option { background: var(--surface2); }
-
-  /* Batsman indicator */
-  .batsman-indicator { display: flex; gap: 8px; align-items: center; margin: 4px 0; }
-  .bat-chip { font-size: 11px; padding: 3px 8px; border-radius: 10px; font-weight: 500; }
-  .bat-rh { background: rgba(26,79,138,0.3); border: 1px solid rgba(26,79,138,0.6); color: #7aadde; }
-  .bat-lh { background: rgba(192,57,43,0.3); border: 1px solid rgba(192,57,43,0.6); color: #e07070; }
-
-  /* Player form */
-  .player-form { display: flex; flex-direction: column; gap: 8px; }
-  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-
-  /* Player list */
-  .player-list { display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto; }
-  .player-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; cursor: grab; transition: all 0.15s; user-select: none; }
-  .player-card:hover { border-color: var(--gold); }
-  .player-card.placed { opacity: 0.5; border-color: var(--success); }
-  .player-card.selected { border-color: var(--gold); background: rgba(212,160,23,0.08); }
-  .player-card.wicket-keeper { border-left: 3px solid var(--warn); }
-  .player-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .player-name { font-size: 13px; font-weight: 500; }
-  .pos-tag { font-size: 11px; padding: 2px 7px; border-radius: 8px; background: rgba(212,160,23,0.15); color: var(--gold); border: 1px solid rgba(212,160,23,0.25); font-family: var(--mono); }
-
-  /* Field area */
-  .field-area { overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 50%, #1b3a28 0%, #0f1a14 80%); padding: 10px; position: relative; }
-  .field-svg { width: min(calc(100vh - 100px), calc(100vw - 660px)); height: min(calc(100vh - 100px), calc(100vw - 660px)); max-width: 620px; max-height: 620px; }
-
-  /* Field tokens */
-  .field-token { cursor: pointer; }
-  .field-token circle.bg { transition: r 0.15s, opacity 0.15s; }
-  .field-token:hover circle.bg { r: 18; }
-  .field-token.dragging-over circle.bg { r: 20; opacity: 0.9; }
-
-  /* Mobile controls - HIDDEN on desktop */
-  .mobile-controls { display: none; }
-
-  /* Right panel */
-  .right-panel { background: var(--surface); border-left: 1px solid var(--border); overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
-
-  /* Analytics */
-  .analytics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .metric-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
-  .metric-val { font-size: 22px; font-weight: 600; font-family: var(--mono); color: var(--gold); }
-  .metric-label { font-size: 11px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
-
-  /* Coverage viz */
-  .coverage-bar { height: 6px; background: var(--surface2); border-radius: 3px; margin-top: 6px; overflow: hidden; }
-  .coverage-fill { height: 100%; border-radius: 3px; background: var(--success); transition: width 0.3s; }
-
-  /* Zone breakdown */
-  .zone-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
-  .zone-row:last-child { border-bottom: none; }
-  .zone-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-
-  /* Field notes */
-  textarea { resize: vertical; min-height: 80px; }
-
-  /* Formation presets */
-  .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .preset-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px; border-radius: 6px; font-size: 11px; font-family: var(--font); cursor: pointer; text-align: center; transition: all 0.15s; }
-  .preset-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(212,160,23,0.08); }
-
-  /* Bowling plan */
-  .bowling-plan { display: flex; flex-direction: column; gap: 6px; }
-  .bowl-row { display: flex; gap: 6px; align-items: center; font-size: 12px; }
-  .bowl-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; flex-shrink: 0; }
-
-  /* Scatter indicator */
-  .scatter-label { font-size: 11px; color: var(--muted); font-family: var(--mono); }
-
-  /* Modal */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
-  .modal-overlay.open { display: flex; }
-  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; min-width: 320px; max-width: 400px; }
-  .modal h3 { font-family: var(--serif); color: var(--gold); margin-bottom: 16px; }
-  .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-
-  /* Tooltip */
-  .tooltip { position: absolute; background: #0f1a14; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 12px; pointer-events: none; z-index: 100; min-width: 140px; transition: opacity 0.1s; white-space: nowrap; }
-  .tooltip.hidden { opacity: 0; }
-
-  /* Saves */
-  .saves-list { display: flex; flex-direction: column; gap: 4px; max-height: 120px; overflow-y: auto; }
-  .save-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: var(--surface2); border-radius: 6px; font-size: 12px; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; }
-  .save-item:hover { border-color: var(--gold); }
-
-  /* Tactics badge */
-  .tactic-badge { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 8px; margin: 2px; font-weight: 500; }
-  .tac-off { background: rgba(192,57,43,0.2); color: #e07070; border: 1px solid rgba(192,57,43,0.3); }
-  .tac-def { background: rgba(26,79,138,0.2); color: #7aadde; border: 1px solid rgba(26,79,138,0.3); }
-  .tac-neu { background: rgba(212,160,23,0.15); color: var(--gold); border: 1px solid rgba(212,160,23,0.25); }
-
-  /* Scrollbar styling */
-  ::-webkit-scrollbar { width: 5px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-  /* ═══════════════════════════════════════════════════════════════════════════════ */
-  /* MOBILE RESPONSIVE DESIGN (max-width: 1024px) */
-  /* ═══════════════════════════════════════════════════════════════════════════════ */
-
-  @media (max-width: 1024px) {
-    /* Mobile layout: stacked columns */
-    .app { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr auto; }
-    
-    /* Hide left/right panels by default, show as tabs */
-    .left-panel { 
-      grid-column: 1; 
-      border-right: none; 
-      border-top: 1px solid var(--border);
-      max-height: 35vh;
-      overflow-y: auto;
-      display: none;
-      padding: 16px;
-      gap: 12px;
-    }
-    
-    .right-panel { 
-      grid-column: 1; 
-      border-left: none; 
-      border-top: 1px solid var(--border);
-      max-height: 0;
-      overflow: hidden;
-      padding: 0;
-      display: none;
-    }
-    
-    .field-area { 
-      grid-column: 1; 
-      grid-row: 3;
-      padding: 8px;
-    }
-    
-    .field-svg { 
-      max-width: 100%;
-      max-height: 60vh;
-      width: auto;
-      height: auto;
-    }
-
-    /* Mobile controls bar - VISIBLE on mobile */
-    .mobile-controls { 
-      grid-row: 4;
-      display: flex !important;
-      gap: 6px;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      padding: 8px;
-      justify-content: space-around;
-    }
-    
-    .mobile-tab-btn {
-      flex: 1;
-      padding: 10px 8px;
-      font-size: 12px;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--text);
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.15s;
-      font-weight: 500;
-    }
-    
-    .mobile-tab-btn:active { background: rgba(212,160,23,0.15); }
-    .mobile-tab-btn.active { background: var(--gold); color: #0f1a14; border-color: var(--gold); }
-
-    /* Show panels when active */
-    .left-panel.show { display: flex; }
-    .right-panel.show { display: flex; max-height: 40vh; padding: 16px; border-top: 1px solid var(--border); gap: 12px; overflow-y: auto; flex-direction: column; }
-
-    /* Header adjustments */
-    header { padding: 10px 12px; }
-    .logo { font-size: 16px; }
-    .logo span { font-size: 11px; }
-    .header-actions button { padding: 5px 10px; font-size: 12px; }
-
-    /* Panel adjustments */
-    .panel-title { font-size: 13px; margin-bottom: 6px; padding-bottom: 6px; }
-    label { font-size: 11px; margin-bottom: 3px; }
-    input, select, textarea { font-size: 14px; padding: 10px 8px; }
-    
-    /* Touch-friendly button sizes */
-    .btn { padding: 10px 14px; font-size: 12px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
-    .btn-primary { min-height: 44px; }
-    
-    /* Setup grid mobile */
-    .setup-grid, .row2 { grid-template-columns: 1fr; }
-    
-    /* Player list mobile */
-    .player-list { max-height: 200px; }
-    .player-card { padding: 8px 10px; font-size: 12px; }
-    .player-name { font-size: 12px; }
-    .player-meta { font-size: 10px; }
-
-    /* Preset grid mobile */
-    .preset-grid { grid-template-columns: 1fr 1fr; gap: 5px; }
-    .preset-btn { padding: 10px; font-size: 12px; min-height: 40px; }
-
-    /* Analytics mobile */
-    .analytics-grid { gap: 6px; }
-    .metric-card { padding: 10px; }
-    .metric-val { font-size: 18px; }
-    .metric-label { font-size: 10px; }
-
-    /* Bowling plan mobile */
-    .bowling-plan { gap: 4px; }
-    .bowl-row { font-size: 11px; gap: 4px; }
-    .bowl-icon { width: 20px; height: 20px; font-size: 9px; }
-
-    /* Zone breakdown mobile */
-    .zone-row { padding: 4px 0; font-size: 11px; }
-
-    /* Batting indicator */
-    .batsman-indicator { font-size: 11px; gap: 4px; }
-    .bat-chip { font-size: 10px; padding: 2px 6px; }
-
-    /* Modal adjustments */
-    .modal { min-width: 90vw; max-width: 95vw; }
-
-    /* Tooltip mobile */
-    .tooltip { font-size: 11px; padding: 6px 10px; }
-
-    /* Saves list mobile */
-    .save-item { font-size: 11px; padding: 8px; }
-    .saves-list { max-height: 100px; }
-
-    /* Tactic badges */
-    .tactic-badge { font-size: 9px; padding: 2px 6px; }
-
-    /* Legend hidden on mobile to save space */
-    .field-area > div:last-child { display: none; }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
   }
 
-  /* ═══════════════════════════════════════════════════════════════════════════════ */
-  /* SMALL MOBILE (max-width: 480px) */
-  /* ═══════════════════════════════════════════════════════════════════════════════ */
-  
-  @media (max-width: 480px) {
-    header { padding: 8px 10px; }
-    .logo { font-size: 14px; }
-    .logo span { font-size: 10px; }
-    
-    .header-actions button { padding: 4px 8px; font-size: 11px; }
-    
-    .field-svg { max-height: 50vh; }
-    
-    .mobile-tab-btn { padding: 8px 6px; font-size: 11px; }
-    
-    input, select, textarea { font-size: 16px; } /* Prevent zoom on iOS */
-    
-    .left-panel { max-height: 40vh; padding: 12px; gap: 10px; }
-    .right-panel { max-height: 45vh; padding: 12px; }
-    
-    .preset-grid { grid-template-columns: 1fr; }
-    .preset-btn { min-height: 38px; font-size: 11px; }
-    
-    .setup-grid { row-gap: 8px; }
-    
-    .player-list { max-height: 150px; }
-    .player-card { padding: 6px 8px; }
-    
-    .metric-val { font-size: 16px; }
-
-    /* Improve touch targets */
-    .btn { min-height: 48px; }
-    .field-token circle.bg { transition: r 0.12s, opacity 0.12s; }
+  body {
+    background: radial-gradient(circle at 20% 20%, #1a3427, var(--bg) 65%);
+    color: var(--text);
+    font-family: "IBM Plex Sans", sans-serif;
+    min-height: 100vh;
+    padding: 18px;
   }
 
-  /* Print */
-  @media print {
-    .left-panel, .right-panel, header .header-actions, .mobile-controls { display: none; }
-    .app { display: block; }
-    .field-area { width: 100%; height: 100vh; background: white; }
-    .field-svg { width: 80vmin; height: 80vmin; }
-    body { background: white; }
+  .app {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 16px;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    height: fit-content;
+  }
+
+  .title {
+    font-family: "DM Serif Display", serif;
+    color: var(--accent);
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  input,
+  select,
+  button {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--text);
+    font: inherit;
+    padding: 10px 12px;
+  }
+
+  input:focus,
+  select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .form {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .btn {
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.16s, border-color 0.16s;
+  }
+
+  .btn:hover {
+    border-color: var(--accent);
+    background: rgba(216, 171, 47, 0.14);
+  }
+
+  .btn-danger {
+    border-color: rgba(221, 107, 107, 0.45);
+    color: #ffc9c9;
+  }
+
+  .btn-danger:hover {
+    border-color: var(--danger);
+    background: rgba(221, 107, 107, 0.15);
+  }
+
+  .row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .players {
+    margin-top: 12px;
+    display: grid;
+    gap: 6px;
+    max-height: 320px;
+    overflow: auto;
+  }
+
+  .player-item {
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+  }
+
+  .player-item .meta {
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .remove-btn {
+    background: transparent;
+    border: none;
+    width: auto;
+    color: #f2a7a7;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0;
+  }
+
+  .field-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 700px;
+  }
+
+  .field-svg {
+    width: min(90vw, 760px);
+    height: min(90vw, 760px);
+    max-width: 760px;
+    max-height: 760px;
+  }
+
+  .field-token {
+    cursor: move;
+  }
+
+  .legend {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  @media (max-width: 980px) {
+    .app {
+      grid-template-columns: 1fr;
+    }
+
+    .field-wrap {
+      min-height: auto;
+    }
   }
 </style>
 </head>
 <body>
 <div class="app">
-  <!-- HEADER -->
-  <header>
-    <div class="logo">
-      ◈ Arun's Fielding Board
-      <span>Cricket — Live Tactical Planner</span>
-    </div>
-    <div class="header-actions">
-      <button class="btn" onclick="exportPNG()">⬇ Export PNG</button>
-      <button class="btn" onclick="printField()">🖨 Print</button>
-      <button class="btn" onclick="saveFormation()">💾 Save</button>
-      <button class="btn btn-primary" onclick="clearField()">↺ Reset Field</button>
-    </div>
-  </header>
+  <aside class="panel">
+    <div class="title">Fielding Board</div>
+    <div class="subtitle">Only player name and position. Wicket keeper is fixed.</div>
 
-  <!-- LEFT PANEL -->
-  <div class="left-panel">
-    <!-- Match Setup -->
-    <div>
-      <div class="panel-title">Match Setup</div>
-      <div class="setup-grid">
-        <div>
-          <label>Your Team</label>
-          <input id="teamName" placeholder="Team name" oninput="saveState()">
-        </div>
-        <div>
-          <label>Opposition</label>
-          <input id="oppName" placeholder="Opposition" oninput="saveState()">
-        </div>
-        <div>
-          <label>Overs / Innings</label>
-          <input id="overs" type="number" value="3" min="1" max="20" oninput="saveState()">
-        </div>
-        <div>
-          <label>Wickets per Inn.</label>
-          <input id="wickets" type="number" value="2" min="1" max="10" oninput="saveState()">
-        </div>
+    <div class="form">
+      <div>
+        <label for="wkName">Wicket Keeper Name</label>
+        <input id="wkName" type="text" placeholder="Enter wicket keeper name">
       </div>
-    </div>
-
-    <!-- Batsman Config -->
-    <div>
-      <div class="panel-title">Batsman at Crease</div>
-      <div class="row2">
+      <div class="row-2">
         <div>
-          <label>Striker Name</label>
-          <input id="strikerName" placeholder="Striker" oninput="saveState();updateBatsmanView()">
-        </div>
-        <div>
-          <label>Non-Striker Name</label>
-          <input id="nonStrikerName" placeholder="Non-striker" oninput="saveState();updateBatsmanView()">
-        </div>
-      </div>
-      <div class="row2">
-        <div>
-          <label>Striker Hand</label>
-          <select id="strikerHand" onchange="updateBatsmanView()">
+          <label for="strikerHand">Striker Hand</label>
+          <select id="strikerHand">
             <option value="RHB">Right Hand</option>
             <option value="LHB">Left Hand</option>
           </select>
         </div>
         <div>
-          <label>Non-Striker Hand</label>
-          <select id="nonStrikerHand" onchange="updateBatsmanView()">
+          <label for="nonStrikerHand">Non-Striker Hand</label>
+          <select id="nonStrikerHand">
             <option value="RHB">Right Hand</option>
             <option value="LHB">Left Hand</option>
           </select>
         </div>
       </div>
-      <div class="batsman-indicator" id="batsmanIndicator" style="margin-top:8px;font-size:12px;">
-        <span class="bat-chip bat-rh">RHB</span> Striker &nbsp;|&nbsp; <span class="bat-chip bat-rh">RHB</span> Non-striker
+      <div>
+        <label for="playerName">Player Name</label>
+        <input id="playerName" type="text" placeholder="Enter player name">
       </div>
-    </div>
-
-    <!-- Current Bowling -->
-    <div>
-      <div class="panel-title">Current Bowler</div>
-      <div class="row2">
-        <div>
-          <label>Bowler</label>
-          <input id="currentBowler" placeholder="Bowler name" oninput="updateFieldDisplay();saveState()">
-        </div>
-        <div>
-          <label>Bowling Style</label>
-          <select id="bowlingStyle" onchange="updateTactics()">
-            <option value="RM">Right-arm Medium</option>
-            <option value="RMF">Right-arm Medium Fast</option>
-            <option value="RF">Right-arm Fast</option>
-            <option value="LM">Left-arm Medium</option>
-            <option value="LMF">Left-arm Medium Fast</option>
-            <option value="LF">Left-arm Fast</option>
-            <option value="OB">Off-break (OB)</option>
-            <option value="LB">Leg-break (LB)</option>
-            <option value="SLA">Slow Left-arm</option>
-            <option value="LS">Leg-spin</option>
-          </select>
-        </div>
+      <div>
+        <label for="playerPosition">Fielding Position</label>
+        <select id="playerPosition"></select>
       </div>
+      <button class="btn" id="addPlayerBtn">Add Player</button>
+      <button class="btn" id="exportPngBtn">Export PNG</button>
+      <button class="btn btn-danger" id="clearPlayersBtn">Clear All Players</button>
     </div>
 
-    <!-- Add Player -->
-    <div>
-      <div class="panel-title">Add Player</div>
-      <div class="player-form">
-        <input id="pName" placeholder="Player name" onkeydown="if(event.key==='Enter')addPlayer()">
-        <div class="row2">
-          <div>
-            <label>Role</label>
-            <select id="pRole">
-              <option value="Fielder">Fielder</option>
-              <option value="WK">Wicket-Keeper</option>
-              <option value="Bowler">Bowler</option>
-              <option value="All-rounder">All-rounder</option>
-            </select>
-          </div>
-          <div>
-            <label>Bat Hand</label>
-            <select id="pHand">
-              <option value="RHB">Right Hand</option>
-              <option value="LHB">Left Hand</option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <label>Fielding Position (click field or pick)</label>
-          <select id="pPosition">
-            <option value="">— Click on field to place —</option>
-            <option value="Wicket Keeper">Wicket Keeper</option>
-            <option value="Slip">Slip</option>
-            <option value="Gully">Gully</option>
-            <option value="Point">Point</option>
-            <option value="Cover Point">Cover Point</option>
-            <option value="Extra Cover">Extra Cover</option>
-            <option value="Mid Off">Mid Off</option>
-            <option value="Mid On">Mid On</option>
-            <option value="Mid Wicket">Mid Wicket</option>
-            <option value="Square Leg">Square Leg</option>
-            <option value="Fine Leg">Fine Leg</option>
-            <option value="Third Man">Third Man</option>
-            <option value="Long Off">Long Off</option>
-            <option value="Long On">Long On</option>
-            <option value="Deep Cover">Deep Cover</option>
-            <option value="Deep Square Leg">Deep Square Leg</option>
-            <option value="Silly Mid On">Silly Mid On</option>
-            <option value="Short Leg">Short Leg</option>
-          </select>
-        </div>
-        <button class="btn btn-primary" onclick="addPlayer()" style="width:100%">+ Add to Squad</button>
-      </div>
+    <div class="players" id="playersList"></div>
+  </aside>
+
+  <section>
+    <div class="field-wrap">
+      <svg class="field-svg" id="fieldSvg" viewBox="0 0 700 700" xmlns="http://www.w3.org/2000/svg" aria-label="Cricket field">
+        <defs>
+          <radialGradient id="fieldGradient" cx="50%" cy="45%" r="60%">
+            <stop offset="0%" stop-color="#3b7f5c"/>
+            <stop offset="100%" stop-color="#1d402f"/>
+          </radialGradient>
+        </defs>
+
+        <circle cx="350" cy="350" r="320" fill="url(#fieldGradient)" stroke="#84a78f" stroke-opacity="0.5" stroke-width="2"/>
+        <circle cx="350" cy="350" r="185" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-dasharray="8 7"/>
+
+        <rect x="331" y="248" width="38" height="204" rx="2" fill="#c5a26a" stroke="#8b6a37"/>
+        <line x1="324" y1="285" x2="376" y2="285" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.8"/>
+        <line x1="324" y1="415" x2="376" y2="415" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.8"/>
+
+        <g id="batsmenInfo">
+          <circle cx="350" cy="422" r="7" fill="#d8ab2f" stroke="#ffffff" stroke-width="1.2"/>
+          <text x="350" y="440" text-anchor="middle" font-size="9" fill="#f7e8bf" id="strikerHandLabel">Striker: RHB</text>
+          <circle cx="350" cy="278" r="7" fill="#dd6b6b" stroke="#ffffff" stroke-width="1.2"/>
+          <text x="350" y="260" text-anchor="middle" font-size="9" fill="#ffd3d3" id="nonStrikerHandLabel">Non-Striker: RHB</text>
+        </g>
+
+        <g id="constantWK">
+          <circle cx="350" cy="465" r="18" fill="var(--wk)" stroke="#ffffff" stroke-width="1.5"/>
+          <text x="350" y="468" text-anchor="middle" font-size="10" font-weight="700" fill="#1a241d">WK</text>
+          <text x="350" y="492" text-anchor="middle" font-size="11" fill="#f8d98f" id="wkNameLabel">Wicket Keeper</text>
+          <text x="350" y="508" text-anchor="middle" font-size="10" fill="#f8d98f" fill-opacity="0.8">(Fixed)</text>
+        </g>
+
+        <g id="positionLabels"></g>
+        <g id="fieldTokens"></g>
+      </svg>
     </div>
-
-    <!-- Player List -->
-    <div>
-      <div class="panel-title" style="display:flex;justify-content:space-between">
-        <span>Squad <span id="squadCount" style="font-size:12px;color:var(--muted)">(0/11)</span></span>
-        <button class="btn btn-danger" style="padding:2px 8px;font-size:11px" onclick="clearSquad()">Clear All</button>
-      </div>
-      <div class="player-list" id="playerList"></div>
+    <div class="legend">
+      <span>White: Players</span>
+      <span>Gold: Fixed Wicket Keeper</span>
+      <span>Drag players to adjust</span>
     </div>
-
-    <!-- Formation Presets -->
-    <div>
-      <div class="panel-title">Quick Formations</div>
-      <div class="preset-grid">
-        <button class="preset-btn" onclick="loadPreset('attacking')">⚔ Attacking</button>
-        <button class="preset-btn" onclick="loadPreset('defensive')">🛡 Defensive</button>
-        <button class="preset-btn" onclick="loadPreset('spin')">🌀 Spin Trap</button>
-        <button class="preset-btn" onclick="loadPreset('seam')">💨 Seam Trap</button>
-        <button class="preset-btn" onclick="loadPreset('powerplay')">⚡ Powerplay</button>
-        <button class="preset-btn" onclick="loadPreset('death')">🔥 Death Overs</button>
-      </div>
-    </div>
-
-    <!-- Saves -->
-    <div>
-      <div class="panel-title">Saved Formations</div>
-      <div class="saves-list" id="savesList"></div>
-    </div>
-  </div>
-
-  <!-- FIELD CANVAS -->
-  <div class="field-area" id="fieldArea">
-    <svg class="field-svg" id="fieldSvg" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="fieldGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#2d6a4f"/>
-          <stop offset="70%" stop-color="#2d6a4f"/>
-          <stop offset="100%" stop-color="#1b3a28"/>
-        </radialGradient>
-        <radialGradient id="innerGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#3a8060"/>
-          <stop offset="100%" stop-color="#2d6a4f"/>
-        </radialGradient>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="2" result="blur"/>
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
-
-      <!-- Outer boundary -->
-      <circle cx="300" cy="300" r="275" fill="url(#fieldGrad)" stroke="#4a7c59" stroke-width="2.5"/>
-
-      <!-- Mowing stripe rings -->
-      <circle cx="300" cy="300" r="240" fill="none" stroke="#2a6248" stroke-width="18" stroke-opacity="0.4"/>
-      <circle cx="300" cy="300" r="200" fill="none" stroke="#2d6a4f" stroke-width="18" stroke-opacity="0.4"/>
-      <circle cx="300" cy="300" r="160" fill="none" stroke="#2a6248" stroke-width="18" stroke-opacity="0.4"/>
-
-      <!-- 30-yard circle -->
-      <circle cx="300" cy="300" r="160" fill="none" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="8 6" stroke-opacity="0.35"/>
-
-      <!-- Inner circle / infield -->
-      <circle cx="300" cy="300" r="100" fill="url(#innerGrad)" stroke="#4a7c59" stroke-width="1" stroke-opacity="0.5"/>
-
-      <!-- Pitch rectangle -->
-      <rect x="283" y="215" width="34" height="170" rx="2" fill="#c8a86b" stroke="#a08040" stroke-width="1"/>
-      <!-- Crease lines -->
-      <line x1="278" y1="245" x2="322" y2="245" stroke="#fff" stroke-width="1.5" stroke-opacity="0.8"/>
-      <line x1="278" y1="355" x2="322" y2="355" stroke="#fff" stroke-width="1.5" stroke-opacity="0.8"/>
-      <!-- Popping crease -->
-      <line x1="270" y1="253" x2="330" y2="253" stroke="#fff" stroke-width="1" stroke-opacity="0.6"/>
-      <line x1="270" y1="347" x2="330" y2="347" stroke="#fff" stroke-width="1" stroke-opacity="0.6"/>
-      <!-- Stumps top -->
-      <line x1="292" y1="238" x2="308" y2="238" stroke="#f5d070" stroke-width="2.5" stroke-linecap="round"/>
-      <!-- Stumps bottom -->
-      <line x1="292" y1="362" x2="308" y2="362" stroke="#f5d070" stroke-width="2.5" stroke-linecap="round"/>
-
-      <!-- Compass labels -->
-      <text x="300" y="22" text-anchor="middle" fill="#ffffff" fill-opacity="0.3" font-size="11" font-family="IBM Plex Mono">LONG ON / LONG OFF</text>
-      <text x="578" y="304" text-anchor="start" fill="#ffffff" fill-opacity="0.3" font-size="11" font-family="IBM Plex Mono">OFF</text>
-      <text x="22" y="304" text-anchor="end" fill="#ffffff" fill-opacity="0.3" font-size="11" font-family="IBM Plex Mono">LEG</text>
-
-      <!-- Batsman markers -->
-      <g id="batsmanMarkers">
-        <!-- Striker (bottom crease) -->
-        <circle cx="300" cy="357" r="7" fill="#d4a017" fill-opacity="0.8" stroke="#fff" stroke-width="1.5"/>
-        <text x="300" y="385" text-anchor="middle" fill="#d4a017" font-size="9" font-family="IBM Plex Mono" id="strikerLabel">RHB</text>
-        <text x="300" y="405" text-anchor="middle" fill="#d4a017" font-size="10" font-family="IBM Plex Sans" font-weight="600" id="strikerName">Striker</text>
-        <!-- Non-striker (top crease) -->
-        <circle cx="300" cy="243" r="7" fill="#c0392b" fill-opacity="0.8" stroke="#fff" stroke-width="1.5"/>
-        <text x="300" y="215" text-anchor="middle" fill="#c0392b" font-size="9" font-family="IBM Plex Mono" id="nonStrikerLabel">RHB</text>
-        <text x="300" y="195" text-anchor="middle" fill="#c0392b" font-size="10" font-family="IBM Plex Sans" font-weight="600" id="nonStrikerName">Non-striker</text>
-      </g>
-
-      <!-- Bowler info -->
-      <g id="bowlerInfo">
-        <text x="300" y="25" text-anchor="middle" fill="#d4a017" font-size="11" font-family="IBM Plex Sans" font-weight="600" id="bowlerName">Bowler</text>
-        <text x="300" y="40" text-anchor="middle" fill="#8a9b82" font-size="9" font-family="IBM Plex Mono" id="bowlerStyle">(RM)</text>
-      </g>
-
-      <!-- Ball indicator -->
-      <circle cx="300" cy="300" r="5" fill="#c0392b" stroke="#fff" stroke-width="1.2" id="ballMarker"/>
-
-      <!-- Click overlay -->
-      <circle cx="300" cy="300" r="275" fill="transparent" id="fieldClickOverlay" style="cursor:crosshair"/>
-
-      <!-- Fielder tokens group -->
-      <g id="fieldTokens"></g>
-
-      <!-- Zone overlays (show on analytics) -->
-      <g id="zoneOverlays" opacity="0.12" display="none">
-        <!-- Off side wedge -->
-        <path d="M300 300 L570 100 L570 500 Z" fill="#1a4f8a"/>
-        <!-- Leg side wedge -->
-        <path d="M300 300 L30 100 L30 500 Z" fill="#c0392b"/>
-        <!-- Mid region ring -->
-        <circle cx="300" cy="300" r="160" fill="none" stroke="#d4a017" stroke-width="40"/>
-      </g>
-    </svg>
-
-    <!-- Tooltip -->
-    <div class="tooltip hidden" id="tooltip"></div>
-
-    <!-- Legend -->
-    <div style="display:flex;gap:16px;margin-top:8px;font-size:11px;color:var(--muted)">
-      <span>🟡 Striker (RHB/LHB)</span>
-      <span>🔴 Non-striker</span>
-      <span>⚪ Fielder</span>
-      <span style="color:var(--warn)">🟡 Wicket-Keeper</span>
-    </div>
-  </div>
-
-  <!-- RIGHT PANEL -->
-  <div class="right-panel">
-    <!-- Analytics -->
-    <div>
-      <div class="panel-title">Field Analytics</div>
-      <div class="analytics-grid">
-        <div class="metric-card">
-          <div class="metric-val" id="metPlaced">0</div>
-          <div class="metric-label">Placed / 11</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-val" id="metCoverage">0%</div>
-          <div class="metric-label">Field Coverage</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-val" id="metOffside">0</div>
-          <div class="metric-label">Off Side</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-val" id="metLegside">0</div>
-          <div class="metric-label">Leg Side</div>
-        </div>
-      </div>
-      <div style="margin-top:10px">
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>Coverage</span><span id="coveragePct" style="color:var(--gold)">0%</span></div>
-        <div class="coverage-bar"><div class="coverage-fill" id="coverageBar" style="width:0%"></div></div>
-      </div>
-    </div>
-
-    <!-- Zone Analysis -->
-    <div>
-      <div class="panel-title">Zone Breakdown</div>
-      <div id="zoneBreakdown">
-        <div class="zone-row"><span><span class="zone-dot" style="background:#1a4f8a"></span>Off side</span><span id="zOff">0 players</span></div>
-        <div class="zone-row"><span><span class="zone-dot" style="background:#c0392b"></span>Leg side</span><span id="zLeg">0 players</span></div>
-        <div class="zone-row"><span><span class="zone-dot" style="background:#d4a017"></span>Infield (30yd)</span><span id="zIn">0 players</span></div>
-        <div class="zone-row"><span><span class="zone-dot" style="background:#3eb57a"></span>Outfield</span><span id="zOut">0 players</span></div>
-        <div class="zone-row"><span><span class="zone-dot" style="background:#8a9b82"></span>Behind Wicket</span><span id="zBehind">0 players</span></div>
-      </div>
-    </div>
-
-    <!-- Tactic Advisor -->
-    <div>
-      <div class="panel-title">Captain's Advisor</div>
-      <div id="tacticAdvisor" style="font-size:12px;line-height:1.6;color:var(--muted)">Add players and set your bowling style for tactical tips.</div>
-      <div id="tacticBadges" style="margin-top:8px"></div>
-    </div>
-
-    <!-- Bowling Plan -->
-    <div>
-      <div class="panel-title">Bowling Rotation</div>
-      <div class="bowling-plan" id="bowlingPlan">
-        <div style="font-size:12px;color:var(--muted)">Add bowlers to build your rotation plan.</div>
-      </div>
-      <button class="btn" style="width:100%;margin-top:8px;font-size:12px" onclick="autoRotate()">↺ Auto-suggest Rotation</button>
-    </div>
-
-    <!-- Weakness Spotter -->
-    <div>
-      <div class="panel-title">Gap Finder</div>
-      <div id="gapFinder" style="font-size:12px;color:var(--muted);line-height:1.6">Place fielders to see coverage gaps.</div>
-    </div>
-
-    <!-- Field Notes -->
-    <div>
-      <div class="panel-title">Match Notes</div>
-      <textarea id="matchNotes" placeholder="Captain's notes, tactics, target areas..." rows="4" oninput="saveState()"></textarea>
-    </div>
-
-    <!-- Players summary -->
-    <div>
-      <div class="panel-title">Placed Players</div>
-      <div id="placedSummary" style="font-size:12px;color:var(--muted)">No players placed yet.</div>
-    </div>
-  </div>
-
-  <!-- Mobile Controls Bar -->
-  <div class="mobile-controls">
-    <button class="mobile-tab-btn active" onclick="showMobileTab('field')">🏏 Field</button>
-    <button class="mobile-tab-btn" onclick="showMobileTab('squad')">👥 Squad</button>
-    <button class="mobile-tab-btn" onclick="showMobileTab('analytics')">📊 Analytics</button>
-  </div>
-</div>
-
-<!-- Modal for editing placed player -->
-<div class="modal-overlay" id="editModal">
-  <div class="modal">
-    <h3>Edit Fielder</h3>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <div><label>Player Name</label><input id="editName"></div>
-      <div><label>Position</label><input id="editPos"></div>
-      <div class="row2">
-        <div><label>Role</label>
-          <select id="editRole">
-            <option>Fielder</option><option>WK</option><option>Bowler</option><option>All-rounder</option>
-          </select>
-        </div>
-        <div><label>Bat Hand</label>
-          <select id="editHand">
-            <option value="RHB">Right Hand</option>
-            <option value="LHB">Left Hand</option>
-          </select>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-danger" onclick="removeFielder()">Remove</button>
-      <button class="btn" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveEdit()">Save</button>
-    </div>
-  </div>
+  </section>
 </div>
 
 <script>
-// ─── State ───────────────────────────────────────────────────────────────────
-let players = [];
-let fieldPositions = []; // {id, name, role, hand, x, y, pos}
-let selectedPlayerId = null;
-let editingTokenId = null;
-let clickToPlace = false;
+  const POSITIONS = {
+    "Slip": { x: 420, y: 455 },
+    "Second Slip": { x: 450, y: 430 },
+    "Gully": { x: 500, y: 390 },
+    "Point": { x: 525, y: 350 },
+    "Backward Point": { x: 540, y: 385 },
+    "Cover": { x: 500, y: 285 },
+    "Cover Point": { x: 475, y: 305 },
+    "Extra Cover": { x: 455, y: 260 },
+    "Mid Off": { x: 395, y: 220 },
+    "Long Off": { x: 440, y: 105 },
+    "Deep Cover": { x: 545, y: 200 },
+    "Third Man": { x: 460, y: 560 },
+    "Fine Third": { x: 420, y: 590 },
+    "Mid On": { x: 305, y: 220 },
+    "Long On": { x: 260, y: 105 },
+    "Mid Wicket": { x: 245, y: 280 },
+    "Square Leg": { x: 190, y: 350 },
+    "Backward Square Leg": { x: 175, y: 395 },
+    "Fine Leg": { x: 275, y: 555 },
+    "Deep Square Leg": { x: 120, y: 350 },
+    "Deep Mid Wicket": { x: 130, y: 230 },
+    "Leg Slip": { x: 300, y: 455 },
+    "Short Leg": { x: 305, y: 390 },
+    "Silly Point": { x: 395, y: 355 },
+    "Silly Mid On": { x: 320, y: 315 },
+    "Silly Mid Off": { x: 380, y: 315 },
+    "Short Cover": { x: 430, y: 300 },
+    "Short Fine Leg": { x: 300, y: 470 }
+  };
 
-// Standard position coordinates (RHB perspective, cx=300,cy=300)
-const STD_POSITIONS = {
-  'Wicket Keeper':   {x:300, y:400},
-  'Slip':            {x:360, y:395},
-  'Gully':           {x:400, y:355},
-  'Point':           {x:430, y:300},
-  'Cover Point':     {x:420, y:250},
-  'Extra Cover':     {x:390, y:210},
-  'Mid Off':         {x:340, y:175},
-  'Mid On':          {x:260, y:175},
-  'Mid Wicket':      {x:210, y:250},
-  'Square Leg':      {x:200, y:300},
-  'Fine Leg':        {x:230, y:400},
-  'Third Man':       {x:370, y:440},
-  'Long Off':        {x:385, y:115},
-  'Long On':         {x:215, y:115},
-  'Deep Cover':      {x:460, y:175},
-  'Deep Square Leg': {x:140, y:300},
-  'Silly Mid On':    {x:280, y:270},
-  'Short Leg':       {x:265, y:330},
-};
+  let players = [];
+  const STORAGE_KEY = "fielding_board_state_v1";
 
-const PRESETS = {
-  attacking: [
-    {name:'P1',pos:'Slip',x:360,y:395},{name:'P2',pos:'Gully',x:400,y:355},
-    {name:'P3',pos:'Point',x:430,y:300},{name:'P4',pos:'Short Leg',x:265,y:330},
-    {name:'P5',pos:'Mid Off',x:340,y:175},{name:'P6',pos:'Mid On',x:260,y:175},
-    {name:'P7',pos:'Extra Cover',x:390,y:210},{name:'P8',pos:'Mid Wicket',x:210,y:250},
-    {name:'P9',pos:'Fine Leg',x:230,y:400},{name:'P10',pos:'Third Man',x:370,y:440},
-    {name:'WK',pos:'Wicket Keeper',x:300,y:400,role:'WK'},
-  ],
-  defensive: [
-    {name:'P1',pos:'Long Off',x:385,y:115},{name:'P2',pos:'Long On',x:215,y:115},
-    {name:'P3',pos:'Deep Cover',x:460,y:175},{name:'P4',pos:'Deep Square Leg',x:140,y:300},
-    {name:'P5',pos:'Fine Leg',x:230,y:400},{name:'P6',pos:'Third Man',x:370,y:440},
-    {name:'P7',pos:'Mid Off',x:340,y:175},{name:'P8',pos:'Mid On',x:260,y:175},
-    {name:'P9',pos:'Cover Point',x:420,y:250},{name:'P10',pos:'Square Leg',x:200,y:300},
-    {name:'WK',pos:'Wicket Keeper',x:300,y:400,role:'WK'},
-  ],
-  spin: [
-    {name:'P1',pos:'Slip',x:360,y:395},{name:'P2',pos:'Silly Mid On',x:280,y:270},
-    {name:'P3',pos:'Short Leg',x:265,y:330},{name:'P4',pos:'Point',x:430,y:300},
-    {name:'P5',pos:'Mid Off',x:340,y:175},{name:'P6',pos:'Mid On',x:260,y:175},
-    {name:'P7',pos:'Extra Cover',x:390,y:210},{name:'P8',pos:'Square Leg',x:200,y:300},
-    {name:'P9',pos:'Fine Leg',x:230,y:400},{name:'P10',pos:'Long On',x:215,y:115},
-    {name:'WK',pos:'Wicket Keeper',x:300,y:400,role:'WK'},
-  ],
-  seam: [
-    {name:'P1',pos:'Slip',x:360,y:395},{name:'P2',pos:'Gully',x:400,y:355},
-    {name:'P3',pos:'Third Man',x:370,y:440},{name:'P4',pos:'Cover Point',x:420,y:250},
-    {name:'P5',pos:'Mid Off',x:340,y:175},{name:'P6',pos:'Mid On',x:260,y:175},
-    {name:'P7',pos:'Fine Leg',x:230,y:400},{name:'P8',pos:'Mid Wicket',x:210,y:250},
-    {name:'P9',pos:'Point',x:430,y:300},{name:'P10',pos:'Square Leg',x:200,y:300},
-    {name:'WK',pos:'Wicket Keeper',x:300,y:400,role:'WK'},
-  ],
-  powerplay: [
-    {name:'P1',pos:'Slip',x:360,y:395},{name:'P2',pos:'Gully',x:400,y:355},
-    {name:'P3',pos:'Cover Point',x:420,y:250},{name:'P4',pos:'Extra Cover',x:390,y:210},
-    {name:'P5',pos:'Mid Off',x:340,y:175},{name:'P6',pos:'Mid On',x:260,y:175},
-    {name:'P7',pos:'Mid Wicket',x:210,y:250},{name:'P8',pos:'Square Leg',x:200,y:300},
-    {name:'P9',pos:'Fine Leg',x:230,y:400},{name:'P10',pos:'Third Man',x:370,y:440},
-    {name:'WK',pos:'Wicket Keeper',x:300,y:400,role:'WK'},
-  ],
-  death: [
-    {name:'P1',pos:'Long Off',x:385,y:115},{name:'P2',pos:'Long On',x:215,y:115},
-    {name:'P3',pos:'Deep Cover',x:460,y:175},{name:'P4',pos:'Deep Square Leg',x:140,y:300},
-    {name:'P5',pos:'Fine Leg',x:230,y:400},{name:'P6',pos:'Third Man',x:370,y:440},
-    {name:'P7',pos:'Slip',x:360,y:395},{name:'P8',pos:'Mid Wicket',x:210,y:250},
-    {name:'P9',pos:'Point',x:430,y:300},{name:'P10',pos:'Cover Point',x:420,y:250},
-    {name:'WK',pos:'Wicket Keeper',x:300,y:400,role:'WK'},
-  ],
-};
+  const wkNameInput = document.getElementById("wkName");
+  const strikerHandSelect = document.getElementById("strikerHand");
+  const nonStrikerHandSelect = document.getElementById("nonStrikerHand");
+  const playerNameInput = document.getElementById("playerName");
+  const playerPositionSelect = document.getElementById("playerPosition");
+  const addPlayerBtn = document.getElementById("addPlayerBtn");
+  const exportPngBtn = document.getElementById("exportPngBtn");
+  const clearPlayersBtn = document.getElementById("clearPlayersBtn");
+  const playersList = document.getElementById("playersList");
+  const fieldTokens = document.getElementById("fieldTokens");
+  const positionLabels = document.getElementById("positionLabels");
+  const fieldSvg = document.getElementById("fieldSvg");
+  const wkNameLabel = document.getElementById("wkNameLabel");
+  const strikerHandLabel = document.getElementById("strikerHandLabel");
+  const nonStrikerHandLabel = document.getElementById("nonStrikerHandLabel");
 
-// ─── Init ────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  loadState();
-  setupFieldClick();
-  updateAll();
-});
-
-function setupFieldClick() {
-  document.getElementById('fieldClickOverlay').addEventListener('click', (e) => {
-    if (!selectedPlayerId) return;
-    const svg = document.getElementById('fieldSvg');
-    const rect = svg.getBoundingClientRect();
-    const scaleX = 600 / rect.width;
-    const scaleY = 600 / rect.height;
-    const x = Math.round((e.clientX - rect.left) * scaleX);
-    const y = Math.round((e.clientY - rect.top) * scaleY);
-    const dist = Math.sqrt((x-300)**2 + (y-300)**2);
-    if (dist > 270) return;
-
-    const player = players.find(p => p.id === selectedPlayerId);
-    if (!player) return;
-
-    const posName = guessPosition(x, y);
-    const existing = fieldPositions.findIndex(p => p.id === selectedPlayerId);
-    if (existing >= 0) {
-      fieldPositions[existing] = {...fieldPositions[existing], x, y, pos: posName};
-    } else {
-      fieldPositions.push({...player, x, y, pos: posName});
-    }
-    player.placed = true;
-    selectedPlayerId = null;
-    updateAll();
+  function updateWicketKeeperName() {
+    const name = wkNameInput.value.trim();
+    wkNameLabel.textContent = name || "Wicket Keeper";
     saveState();
-  });
-}
-
-// ─── Position guessing ────────────────────────────────────────────────────────
-function guessPosition(x, y) {
-  const cx = x - 300, cy = -(y - 300);
-  const dist = Math.sqrt(cx**2 + cy**2);
-  const angle = Math.atan2(cx, cy) * 180 / Math.PI;
-
-  if (dist < 30) return 'Pitch';
-  if (dist < 50 && cy < 0) return 'Wicket Keeper';
-
-  if (dist < 120) {
-    if (angle > 60 && angle < 120) return 'Gully';
-    if (angle > 20 && angle <= 60) return 'Cover Point';
-    if (angle > 0 && angle <= 20) return 'Extra Cover';
-    if (angle > -20 && angle <= 0) return 'Mid Off';
-    if (angle > -60 && angle <= -20) return 'Mid On';
-    if (angle > -120 && angle <= -60) return 'Mid Wicket';
-    if (angle <= -120 || angle >= 120) return 'Square Leg';
-    if (angle > 120) return 'Slip';
-  } else {
-    if (angle > 100) return 'Third Man';
-    if (angle > 50 && angle <= 100) return 'Point';
-    if (angle > 0 && angle <= 50) return 'Deep Cover';
-    if (angle > -50 && angle <= 0) return 'Long Off';
-    if (angle > -100 && angle <= -50) return 'Long On';
-    if (angle <= -100) return 'Deep Square Leg';
-    if (angle < -140 || angle > 140) return 'Fine Leg';
-  }
-  return 'Custom';
-}
-
-// ─── Player management ────────────────────────────────────────────────────────
-function addPlayer() {
-  const name = document.getElementById('pName').value.trim();
-  if (!name) return;
-  const role = document.getElementById('pRole').value;
-  const hand = document.getElementById('pHand').value;
-  const posKey = document.getElementById('pPosition').value;
-
-  const id = Date.now() + Math.random();
-  const player = {id, name, role, hand, placed: false};
-  players.push(player);
-
-  if (posKey && STD_POSITIONS[posKey]) {
-    const {x, y} = STD_POSITIONS[posKey];
-    fieldPositions.push({...player, x, y, pos: posKey});
-    player.placed = true;
   }
 
-  document.getElementById('pName').value = '';
-  document.getElementById('pPosition').value = '';
-  updateAll();
-  saveState();
-}
-
-function removePlayer(id) {
-  players = players.filter(p => p.id !== id);
-  fieldPositions = fieldPositions.filter(p => p.id !== id);
-  updateAll();
-  saveState();
-}
-
-function clearSquad() {
-  if (!confirm('Clear all players?')) return;
-  players = [];
-  fieldPositions = [];
-  updateAll();
-  saveState();
-}
-
-function clearField() {
-  fieldPositions = [];
-  players.forEach(p => p.placed = false);
-  updateAll();
-  saveState();
-}
-
-function selectPlayer(id) {
-  selectedPlayerId = selectedPlayerId === id ? null : id;
-  renderPlayerList();
-}
-
-// ─── Load preset ─────────────────────────────────────────────────────────────
-function loadPreset(name) {
-  const preset = PRESETS[name];
-  if (!preset || players.length === 0) {
-    alert('⚠️ Add players to your squad first, then apply the formation!');
-    return;
+  function updateBatsmenHands() {
+    strikerHandLabel.textContent = "Striker: " + strikerHandSelect.value;
+    nonStrikerHandLabel.textContent = "Non-Striker: " + nonStrikerHandSelect.value;
+    saveState();
   }
 
-  const squadPlayers = [...players];
-  if (squadPlayers.length < 11) {
-    alert('⚠️ You need 11 players in squad. Current: ' + squadPlayers.length);
-    return;
+  function initPositionOptions() {
+    Object.keys(POSITIONS).forEach((position) => {
+      const option = document.createElement("option");
+      option.value = position;
+      option.textContent = position;
+      playerPositionSelect.appendChild(option);
+    });
   }
 
-  fieldPositions = [];
-  
-  // Map squad players to preset positions
-  preset.forEach((p, i) => {
-    const squadPlayer = squadPlayers[i];
-    if (!squadPlayer) return;
-    
-    const fieldPlayer = {
-      ...squadPlayer,
-      x: p.x,
-      y: p.y,
-      pos: p.pos,
-      placed: true
-    };
-    fieldPositions.push(fieldPlayer);
-  });
-
-  // Mark all players as placed
-  players.forEach(p => p.placed = true);
-  updateAll();
-  saveState();
-}
-
-// ─── Edit modal ───────────────────────────────────────────────────────────────
-function openEditModal(id) {
-  editingTokenId = id;
-  const fp = fieldPositions.find(p => p.id == id);
-  if (!fp) return;
-  document.getElementById('editName').value = fp.name;
-  document.getElementById('editPos').value = fp.pos || '';
-  document.getElementById('editRole').value = fp.role || 'Fielder';
-  document.getElementById('editHand').value = fp.hand || 'RHB';
-  document.getElementById('editModal').classList.add('open');
-}
-
-function closeModal() {
-  document.getElementById('editModal').classList.remove('open');
-  editingTokenId = null;
-}
-
-function saveEdit() {
-  const fp = fieldPositions.find(p => p.id == editingTokenId);
-  if (!fp) return;
-  fp.name = document.getElementById('editName').value;
-  fp.pos = document.getElementById('editPos').value;
-  fp.role = document.getElementById('editRole').value;
-  fp.hand = document.getElementById('editHand').value;
-  const p = players.find(p => p.id == editingTokenId);
-  if (p) { p.name = fp.name; p.role = fp.role; p.hand = fp.hand; }
-  closeModal();
-  updateAll();
-  saveState();
-}
-
-function removeFielder() {
-  fieldPositions = fieldPositions.filter(p => p.id != editingTokenId);
-  const p = players.find(p => p.id == editingTokenId);
-  if (p) p.placed = false;
-  closeModal();
-  updateAll();
-  saveState();
-}
-
-// ─── Render ───────────────────────────────────────────────────────────────────
-function updateAll() {
-  renderPlayerList();
-  renderFieldTokens();
-  updateAnalytics();
-  updateAdvisor();
-  updateBatsmanView();
-  updateFieldDisplay();
-  renderSaves();
-}
-
-function renderPlayerList() {
-  const list = document.getElementById('playerList');
-  list.innerHTML = '';
-  document.getElementById('squadCount').textContent = `(${players.length}/11)`;
-
-  players.forEach(p => {
-    const div = document.createElement('div');
-    div.className = 'player-card' + (p.placed ? ' placed' : '') + (selectedPlayerId === p.id ? ' selected' : '') + (p.role === 'WK' ? ' wicket-keeper' : '');
-    div.onclick = () => { if (!p.placed) selectPlayer(p.id); };
-    const roleColor = p.role === 'WK' ? '#e8a020' : p.role === 'Bowler' ? '#7aadde' : p.role === 'All-rounder' ? '#3eb57a' : '#8a9b82';
-    div.innerHTML = `
-      <div>
-        <div class="player-name">${p.name}</div>
-        <div class="player-meta">${p.role} · <span class="${p.hand==='LHB'?'bat-lh':'bat-rh'}" style="font-size:10px;padding:1px 5px;border-radius:6px;background:rgba(0,0,0,0.3)">${p.hand}</span></div>
-      </div>
-      <div style="display:flex;gap:6px;align-items:center">
-        ${p.placed ? '<span style="color:var(--success);font-size:11px">✓ On field</span>' : '<span style="color:var(--muted);font-size:11px">Click to place →</span>'}
-        <button onclick="event.stopPropagation();removePlayer(${p.id})" style="background:transparent;border:none;color:var(--danger);cursor:pointer;font-size:14px;padding:0 4px">×</button>
-      </div>`;
-    list.appendChild(div);
-  });
-
-  if (players.length === 0) {
-    list.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:16px">Add players to your squad above</div>';
+  function renderPositionGuides() {
+    positionLabels.innerHTML = "";
+    Object.entries(POSITIONS).forEach(([name, point]) => {
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      g.innerHTML = `
+        <circle cx="${point.x}" cy="${point.y}" r="3" fill="#d8ab2f" fill-opacity="0.55" />
+        <text x="${point.x}" y="${point.y - 8}" text-anchor="middle" font-size="8" fill="#dce8df" fill-opacity="0.75">${name}</text>
+      `;
+      positionLabels.appendChild(g);
+    });
   }
-}
 
-function renderFieldTokens() {
-  const g = document.getElementById('fieldTokens');
-  g.innerHTML = '';
+  function addPlayer() {
+    const name = playerNameInput.value.trim();
+    const position = playerPositionSelect.value;
+    if (!name || !position) {
+      return;
+    }
 
-  fieldPositions.forEach(fp => {
-    const isWK = fp.role === 'WK';
-    const isBowler = fp.role === 'Bowler';
-    const color = isWK ? '#e8a020' : isBowler ? '#4a8fcc' : '#e8f0e0';
-    const strokeColor = isWK ? '#fff' : '#1b3a28';
-    const initials = fp.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+    const { x, y } = POSITIONS[position];
+    players.push({
+      id: Date.now() + Math.random(),
+      name,
+      position,
+      x,
+      y
+    });
 
-    const grp = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    grp.setAttribute('class', 'field-token');
-    grp.setAttribute('cursor', 'pointer');
-    grp.innerHTML = `
-      <circle class="bg" cx="${fp.x}" cy="${fp.y}" r="16" fill="${color}" stroke="${strokeColor}" stroke-width="1.5" opacity="0.92"/>
-      <text x="${fp.x}" y="${fp.y+1}" text-anchor="middle" dominant-baseline="central" font-size="9" font-family="IBM Plex Sans" font-weight="600" fill="${isWK?'#0f1a14':'#1b3a28'}">${initials}</text>
-      <text x="${fp.x}" y="${fp.y+26}" text-anchor="middle" font-size="8.5" font-family="IBM Plex Sans" fill="#ffffff" fill-opacity="0.85" style="text-shadow:0 1px 2px #0007">${fp.name.split(' ')[0]}</text>
+    playerNameInput.value = "";
+    renderPlayers();
+    saveState();
+  }
+
+  function removePlayer(id) {
+    players = players.filter((player) => player.id !== id);
+    renderPlayers();
+    saveState();
+  }
+
+  function clearPlayers() {
+    players = [];
+    renderPlayers();
+    saveState();
+  }
+
+  function renderPlayersList() {
+    playersList.innerHTML = "";
+
+    if (players.length === 0) {
+      playersList.innerHTML = "<div class='player-item'><span>No players added yet.</span></div>";
+      return;
+    }
+
+    players.forEach((player) => {
+      const row = document.createElement("div");
+      row.className = "player-item";
+      row.innerHTML = `
+        <div>
+          <div>${player.name}</div>
+          <div class="meta">${player.position}</div>
+        </div>
+        <button class="remove-btn" aria-label="Remove ${player.name}">x</button>
+      `;
+      row.querySelector(".remove-btn").addEventListener("click", () => removePlayer(player.id));
+      playersList.appendChild(row);
+    });
+  }
+
+  function getInitials(name) {
+    return name
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase();
+  }
+
+  function createDraggableToken(player) {
+    const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    group.setAttribute("class", "field-token");
+
+    const initials = getInitials(player.name) || "P";
+    const firstName = player.name.split(" ")[0];
+
+    group.innerHTML = `
+      <circle cx="${player.x}" cy="${player.y}" r="18" fill="var(--token)" stroke="#1a3024" stroke-width="1.5" />
+      <text x="${player.x}" y="${player.y + 1}" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#1a3024">${initials}</text>
+      <text x="${player.x}" y="${player.y + 28}" text-anchor="middle" font-size="10" fill="#ffffff" fill-opacity="0.92">${firstName}</text>
     `;
 
-    // Drag behavior
-    let dragging = false, dragStartX, dragStartY;
-    grp.addEventListener('mousedown', (e) => {
-      e.stopPropagation();
+    let dragging = false;
+
+    group.addEventListener("mousedown", (event) => {
+      event.preventDefault();
       dragging = true;
-      dragStartX = e.clientX;
-      dragStartY = e.clientY;
-      const svg = document.getElementById('fieldSvg');
-      const rect = svg.getBoundingClientRect();
-      const scaleX = 600 / rect.width, scaleY = 600 / rect.height;
 
-      const onMove = (me) => {
-        if (!dragging) return;
-        const nx = Math.round((me.clientX - rect.left) * scaleX);
-        const ny = Math.round((me.clientY - rect.top) * scaleY);
-        fp.x = Math.max(30, Math.min(570, nx));
-        fp.y = Math.max(30, Math.min(570, ny));
-        fp.pos = guessPosition(fp.x, fp.y);
-        renderFieldTokens();
-        updateAnalytics();
-      };
-      const onUp = (me) => {
-        dragging = false;
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-        if (Math.abs(me.clientX - dragStartX) < 5 && Math.abs(me.clientY - dragStartY) < 5) {
-          openEditModal(fp.id);
-        } else {
-          saveState();
+      const svgRect = fieldSvg.getBoundingClientRect();
+      const scaleX = 700 / svgRect.width;
+      const scaleY = 700 / svgRect.height;
+
+      function onMove(moveEvent) {
+        if (!dragging) {
+          return;
         }
-      };
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
+
+        const nextX = Math.round((moveEvent.clientX - svgRect.left) * scaleX);
+        const nextY = Math.round((moveEvent.clientY - svgRect.top) * scaleY);
+        const centerX = 350;
+        const centerY = 350;
+        const distance = Math.hypot(nextX - centerX, nextY - centerY);
+
+        if (distance <= 315) {
+          player.x = nextX;
+          player.y = nextY;
+        }
+
+        renderFieldTokens();
+      }
+
+      function onUp() {
+        dragging = false;
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+        saveState();
+      }
+
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
     });
 
-    // Tooltip
-    grp.addEventListener('mouseenter', (e) => {
-      const t = document.getElementById('tooltip');
-      t.innerHTML = `<b>${fp.name}</b><br>${fp.pos || 'Custom position'}<br>${fp.role} · ${fp.hand}`;
-      t.classList.remove('hidden');
-    });
-    grp.addEventListener('mouseleave', () => {
-      document.getElementById('tooltip').classList.add('hidden');
-    });
-    grp.addEventListener('mousemove', (e) => {
-      const fa = document.getElementById('fieldArea');
-      const r = fa.getBoundingClientRect();
-      const t = document.getElementById('tooltip');
-      t.style.left = (e.clientX - r.left + 12) + 'px';
-      t.style.top = (e.clientY - r.top - 20) + 'px';
-    });
-
-    g.appendChild(grp);
-  });
-}
-
-// ─── Analytics ────────────────────────────────────────────────────────────────
-function updateAnalytics() {
-  const total = fieldPositions.length;
-  document.getElementById('metPlaced').textContent = total;
-  const pct = Math.round((total / 11) * 100);
-  document.getElementById('metCoverage').textContent = pct + '%';
-  document.getElementById('coverageBar').style.width = pct + '%';
-  document.getElementById('coveragePct').textContent = pct + '%';
-
-  let off = 0, leg = 0, infield = 0, outfield = 0, behind = 0;
-  fieldPositions.forEach(fp => {
-    const dx = fp.x - 300;
-    const dist = Math.sqrt(dx**2 + (fp.y-300)**2);
-    if (fp.x > 300) off++; else leg++;
-    if (dist <= 160) infield++; else outfield++;
-    if (fp.y > 350 && dist < 120) behind++;
-  });
-
-  document.getElementById('metOffside').textContent = off;
-  document.getElementById('metLegside').textContent = leg;
-  document.getElementById('zOff').textContent = off + ' player' + (off !== 1 ? 's' : '');
-  document.getElementById('zLeg').textContent = leg + ' player' + (leg !== 1 ? 's' : '');
-  document.getElementById('zIn').textContent = infield + ' player' + (infield !== 1 ? 's' : '');
-  document.getElementById('zOut').textContent = outfield + ' player' + (outfield !== 1 ? 's' : '');
-  document.getElementById('zBehind').textContent = behind + ' player' + (behind !== 1 ? 's' : '');
-
-  // Gap finder
-  findGaps(off, leg, infield, outfield, total);
-
-  // Placed summary
-  renderPlacedSummary();
-}
-
-function findGaps(off, leg, infield, outfield, total) {
-  const gaps = [];
-  if (total === 0) { document.getElementById('gapFinder').textContent = 'Place fielders to see coverage gaps.'; return; }
-  if (off < 3) gaps.push('⚠ Off-side is under-manned — expose to drives.');
-  if (leg < 2) gaps.push('⚠ Leg-side gap — vulnerable to leg-side hits.');
-  if (outfield < 2) gaps.push('⚠ Thin outfield — easy boundaries possible.');
-  if (infield < 4) gaps.push('⚠ Weak infield — quick singles likely.');
-  const behindWK = fieldPositions.filter(fp => fp.y > 380 && fp.x !== 300).length;
-  if (behindWK < 2) gaps.push('💡 Add a fine leg / third man for edges.');
-  if (gaps.length === 0) gaps.push('✓ Balanced field placement. Good coverage!');
-  document.getElementById('gapFinder').innerHTML = gaps.join('<br>');
-}
-
-function renderPlacedSummary() {
-  const el = document.getElementById('placedSummary');
-  if (fieldPositions.length === 0) { el.textContent = 'No players placed yet.'; return; }
-  el.innerHTML = fieldPositions.map(fp => `
-    <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px">
-      <span>${fp.name} <span style="color:var(--muted)">(${fp.hand})</span></span>
-      <span style="color:var(--gold);font-family:var(--mono)">${fp.pos || 'Custom'}</span>
-    </div>`).join('');
-}
-
-// ─── Batsman view ─────────────────────────────────────────────────────────────
-function updateBatsmanView() {
-  const strikerName = document.getElementById('strikerName').value.trim() || 'Striker';
-  const nonStrikerName = document.getElementById('nonStrikerName').value.trim() || 'Non-striker';
-  const striker = document.getElementById('strikerHand').value;
-  const nonStriker = document.getElementById('nonStrikerHand').value;
-  document.getElementById('strikerLabel').textContent = striker;
-  document.getElementById('nonStrikerLabel').textContent = nonStriker;
-  const ind = document.getElementById('batsmanIndicator');
-  ind.innerHTML = `<span class="bat-chip ${striker==='LHB'?'bat-lh':'bat-rh'}">${striker}</span> ${strikerName} &nbsp;|&nbsp; <span class="bat-chip ${nonStriker==='LHB'?'bat-lh':'bat-rh'}">${nonStriker}</span> ${nonStrikerName}`;
-  updateFieldDisplay();
-  updateAdvisor();
-}
-
-function updateFieldDisplay() {
-  // Update batsman names on field
-  const strikerName = document.getElementById('strikerName').value.trim() || 'Striker';
-  const nonStrikerName = document.getElementById('nonStrikerName').value.trim() || 'Non-striker';
-  const bowlerName = document.getElementById('currentBowler').value.trim() || 'Bowler';
-  const bowlerStyle = document.getElementById('bowlingStyle').value || 'RM';
-  
-  document.getElementById('strikerName').textContent = strikerName;
-  document.getElementById('nonStrikerName').textContent = nonStrikerName;
-  document.getElementById('bowlerName').textContent = bowlerName;
-  document.getElementById('bowlerStyle').textContent = '(' + bowlerStyle + ')';
-}
-
-// ─── Tactic Advisor ───────────────────────────────────────────────────────────
-function updateTactics() {
-  updateFieldDisplay();
-  updateAdvisor();
-  saveState();
-}
-
-function updateAdvisor() {
-  const style = document.getElementById('bowlingStyle').value;
-  const bowlerName = document.getElementById('currentBowler').value.trim() || 'Current Bowler';
-  const striker = document.getElementById('strikerHand').value;
-  const strikerName = document.getElementById('strikerName').value.trim() || 'Striker';
-  const nonStrikerName = document.getElementById('nonStrikerName').value.trim() || 'Non-striker';
-  const tips = [];
-  const badges = [];
-
-  // Matchup analysis
-  const matchupIntro = `<b>${bowlerName}</b> vs <b>${strikerName}</b>`;
-  tips.push(matchupIntro);
-
-  if (style.startsWith('R') && striker === 'LHB') {
-    tips.push('🎯 Left-hander vs right-arm: Attack with extra cover & mid-wicket. Slip cordon effective for away swingers.');
-    badges.push('<span class="tactic-badge tac-off">LHB vs RM</span>');
-  } else if (style.startsWith('R') && striker === 'RHB') {
-    tips.push('🎯 Right-hander vs right-arm: Set leg-side trap (mid-on, mid-wicket). Watch for leg-side flicks.');
-    badges.push('<span class="tactic-badge tac-off">RHB vs RM</span>');
+    return group;
   }
 
-  if (style === 'OB' && striker === 'RHB') {
-    tips.push('🌀 Off-break on RHB: Pack off-side (slip, gully, cover). Leave mid-wicket open as decoy. Expect defense.');
-    badges.push('<span class="tactic-badge tac-off">Off-break trap</span>');
-  } else if (style === 'OB' && striker === 'LHB') {
-    tips.push('🌀 Off-break on LHB: Slide the ball across. Place fielders for driving through covers.');
-    badges.push('<span class="tactic-badge tac-off">Flick danger</span>');
+  function renderFieldTokens() {
+    fieldTokens.innerHTML = "";
+    players.forEach((player) => {
+      fieldTokens.appendChild(createDraggableToken(player));
+    });
   }
 
-  if (style === 'LB' || style === 'LS') {
-    tips.push('🌀 Leg-spin attack: Deep mid-wicket & long on for sweep. Slip + gully for top edges. Watch for reverse sweep.');
-    badges.push('<span class="tactic-badge tac-neu">Sweep trap</span>');
+  function renderPlayers() {
+    renderPlayersList();
+    renderFieldTokens();
   }
 
-  if (style === 'SLA') {
-    if (striker === 'RHB') {
-      tips.push('🌀 SLA vs RHB: Ball turns into bat. Mid-on & short mid-wicket for bat-pad. Mid-off for defense.');
-    } else {
-      tips.push('🌀 SLA vs LHB: Expects flick/sweep. Deep mid-wicket & backstop. Mid-off tight for drives.');
+  function exportPNG() {
+    const serializer = new XMLSerializer();
+    let svgString = serializer.serializeToString(fieldSvg);
+    svgString = svgString.replace(/xmlns="[^"]*"/, 'xmlns="http://www.w3.org/2000/svg"');
+
+    const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(svgBlob);
+    const image = new Image();
+
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1200;
+      canvas.height = 1200;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#102019";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+      const link = document.createElement("a");
+      link.download = "fielding-board.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      URL.revokeObjectURL(url);
+    };
+
+    image.src = url;
+  }
+
+  function saveState() {
+    const state = {
+      wicketKeeperName: wkNameInput.value,
+      strikerHand: strikerHandSelect.value,
+      nonStrikerHand: nonStrikerHandSelect.value,
+      players
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function loadState() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      return;
     }
-    badges.push('<span class="tactic-badge tac-def">Bat-pad zone</span>');
+
+    try {
+      const state = JSON.parse(raw);
+      wkNameInput.value = state.wicketKeeperName || "";
+      strikerHandSelect.value = state.strikerHand || "RHB";
+      nonStrikerHandSelect.value = state.nonStrikerHand || "RHB";
+      players = Array.isArray(state.players) ? state.players : [];
+    } catch (_error) {
+      players = [];
+    }
   }
 
-  if (style.includes('F')) {
-    tips.push('⚡ Fast bowling: Slip, gully critical. Third man & fine leg for edges. Mid-off for drives. Keep pace variations.');
-    badges.push('<span class="tactic-badge tac-off">Edge trap</span>');
-  }
+  addPlayerBtn.addEventListener("click", addPlayer);
+  exportPngBtn.addEventListener("click", exportPNG);
+  clearPlayersBtn.addEventListener("click", clearPlayers);
+  wkNameInput.addEventListener("input", updateWicketKeeperName);
+  strikerHandSelect.addEventListener("change", updateBatsmenHands);
+  nonStrikerHandSelect.addEventListener("change", updateBatsmenHands);
+  playerNameInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      addPlayer();
+    }
+  });
 
-  // Field strength indicators
-  const placed = fieldPositions.length;
-  if (placed >= 10) {
-    badges.push('<span class="tactic-badge tac-neu">Full XI ✓</span>');
-  } else if (placed >= 8) {
-    badges.push('<span class="tactic-badge tac-neu">' + placed + '/11 Fielders</span>');
-  } else {
-    badges.push('<span class="tactic-badge tac-def">' + placed + '/11 (Add ' + (11-placed) + ')</span>');
-  }
-
-  // Non-striker threat analysis
-  tips.push(`<br><b>Non-striker: ${nonStrikerName}</b> — Ready to face next ball. Keep mid-wicket tight.`);
-
-  const advisor = document.getElementById('tacticAdvisor');
-  advisor.innerHTML = tips.length ? tips.join('<br>') : 'Set bowling style for personalized tactics.';
-  document.getElementById('tacticBadges').innerHTML = badges.join('');
-
-  updateBowlingPlan(style, bowlerName);
-}
-
-function updateBowlingPlan(style, bowlerName = '') {
-  const bowlers = fieldPositions.filter(fp => fp.role === 'Bowler' || fp.role === 'All-rounder');
-  const currentBowler = bowlerName || document.getElementById('currentBowler').value.trim() || 'Current Bowler';
-  const strikerName = document.getElementById('strikerName').value.trim() || 'Striker';
-  const plan = document.getElementById('bowlingPlan');
-  
-  if (bowlers.length === 0) {
-    plan.innerHTML = '<div style="font-size:12px;color:var(--muted)">Add bowlers (role: Bowler/All-rounder) to see rotation.</div>';
-    return;
-  }
-
-  const overs = parseInt(document.getElementById('overs').value) || 3;
-  
-  let html = '<div style="font-size:11px;color:var(--gold);margin-bottom:8px;font-weight:500">📊 Active: ' + currentBowler + ' → ' + strikerName + '</div>';
-  
-  html += '<div style="font-size:11px;color:var(--muted);margin-bottom:10px;padding:8px;background:rgba(212,160,23,0.08);border-radius:6px;border-left:2px solid var(--gold)">';
-  html += 'Bowling Style: <b>' + (style || 'RM') + '</b><br>';
-  html += 'Rotation: ' + Math.ceil(overs / bowlers.length) + ' overs per bowler';
-  html += '</div>';
-  
-  html += bowlers.map((b, i) => `
-    <div class="bowl-row" style="${b.name === currentBowler ? 'background:rgba(212,160,23,0.1);padding:4px;border-radius:4px;border-left:2px solid var(--gold)' : ''}">
-      <div class="bowl-icon" style="background:rgba(74,143,204,0.2);color:#7aadde;font-weight:600">B${i+1}</div>
-      <div style="flex:1">
-        <div style="font-size:12px;font-weight:500">${b.name}</div>
-        <div style="font-size:10px;color:var(--muted)">${b.role} · ${Math.ceil(overs/bowlers.length)}⚾ ${b.hand}</div>
-      </div>
-      ${b.name === currentBowler ? '<span style="color:var(--gold);font-weight:600;font-size:10px">NOW</span>' : ''}
-    </div>`).join('');
-  
-  plan.innerHTML = html;
-}
-
-
-function autoRotate() {
-  const bowlers = players.filter(p => p.role === 'Bowler' || p.role === 'All-rounder');
-  if (bowlers.length === 0) { alert('Add bowlers to your squad first.'); return; }
-  const overs = parseInt(document.getElementById('overs').value) || 3;
-  const style = document.getElementById('bowlingStyle').value;
-  const strikerName = document.getElementById('strikerName').value.trim() || 'Striker';
-  const plan = document.getElementById('bowlingPlan');
-  
-  let html = '<div style="font-size:11px;color:var(--gold);margin-bottom:8px;font-weight:500">🤖 AI-Suggested Rotation (' + overs + ' overs):</div>';
-  html += Array.from({length: overs}, (_, i) => {
-    const b = bowlers[i % bowlers.length];
-    const bowlType = i % 2 === 0 ? '(Fast)' : '(Change)';
-    return `<div class="bowl-row" style="padding:4px 0"><div class="bowl-icon" style="background:rgba(212,160,23,0.15);color:var(--gold);font-weight:600">O${i+1}</div><div style="font-size:11px"><b>${b.name}</b> <span style="color:var(--muted)">${bowlType}</span></div></div>`;
-  }).join('');
-  html += '<div style="font-size:10px;color:var(--muted);margin-top:8px;padding:6px;border-top:1px solid var(--border)">💡 Rotation balances attack with field pressure vs ${strikerName}</div>';
-  
-  plan.innerHTML = html;
-}
-
-// ─── Persistence ──────────────────────────────────────────────────────────────
-function saveState() {
-  const state = {
-    players, fieldPositions,
-    team: document.getElementById('teamName').value,
-    opp: document.getElementById('oppName').value,
-    overs: document.getElementById('overs').value,
-    wickets: document.getElementById('wickets').value,
-    strikerName: document.getElementById('strikerName').value,
-    nonStrikerName: document.getElementById('nonStrikerName').value,
-    striker: document.getElementById('strikerHand').value,
-    nonStriker: document.getElementById('nonStrikerHand').value,
-    bowler: document.getElementById('currentBowler').value,
-    style: document.getElementById('bowlingStyle').value,
-    notes: document.getElementById('matchNotes').value,
-  };
-  localStorage.setItem('ccfp_state', JSON.stringify(state));
-}
-
-function loadState() {
-  const raw = localStorage.getItem('ccfp_state');
-  if (!raw) return;
-  try {
-    const s = JSON.parse(raw);
-    players = s.players || [];
-    fieldPositions = s.fieldPositions || [];
-    document.getElementById('teamName').value = s.team || '';
-    document.getElementById('oppName').value = s.opp || '';
-    document.getElementById('overs').value = s.overs || 3;
-    document.getElementById('wickets').value = s.wickets || 2;
-    document.getElementById('strikerName').value = s.strikerName || '';
-    document.getElementById('nonStrikerName').value = s.nonStrikerName || '';
-    document.getElementById('strikerHand').value = s.striker || 'RHB';
-    document.getElementById('nonStrikerHand').value = s.nonStriker || 'RHB';
-    document.getElementById('currentBowler').value = s.bowler || '';
-    document.getElementById('bowlingStyle').value = s.style || 'RM';
-    document.getElementById('matchNotes').value = s.notes || '';
-  } catch(e) {}
-}
-
-function saveFormation() {
-  const name = prompt('Name this formation:', document.getElementById('teamName').value + ' vs ' + document.getElementById('oppName').value);
-  if (!name) return;
-  const saves = JSON.parse(localStorage.getItem('ccfp_saves') || '[]');
-  saves.unshift({name, time: Date.now(), fieldPositions: [...fieldPositions], players: [...players]});
-  if (saves.length > 8) saves.pop();
-  localStorage.setItem('ccfp_saves', JSON.stringify(saves));
-  renderSaves();
-}
-
-function renderSaves() {
-  const saves = JSON.parse(localStorage.getItem('ccfp_saves') || '[]');
-  const el = document.getElementById('savesList');
-  if (saves.length === 0) { el.innerHTML = '<div style="font-size:12px;color:var(--muted)">No saved formations.</div>'; return; }
-  el.innerHTML = saves.map((s, i) => `
-    <div class="save-item" onclick="loadSave(${i})">
-      <span>${s.name}</span>
-      <span style="color:var(--muted)">${new Date(s.time).toLocaleDateString()}</span>
-    </div>`).join('');
-}
-
-function loadSave(i) {
-  const saves = JSON.parse(localStorage.getItem('ccfp_saves') || '[]');
-  const s = saves[i];
-  if (!s) return;
-  players = s.players;
-  fieldPositions = s.fieldPositions;
-  updateAll();
-  saveState();
-}
-
-// ─── Export ───────────────────────────────────────────────────────────────────
-function exportPNG() {
-  const svg = document.getElementById('fieldSvg');
-  const serializer = new XMLSerializer();
-  let svgStr = serializer.serializeToString(svg);
-  // Inline fonts approximation
-  svgStr = svgStr.replace(/xmlns="[^"]*"/, 'xmlns="http://www.w3.org/2000/svg"');
-  const blob = new Blob([svgStr], {type: 'image/svg+xml'});
-  const url = URL.createObjectURL(blob);
-  const canvas = document.createElement('canvas');
-  canvas.width = 900; canvas.height = 900;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#0f1a14';
-  ctx.fillRect(0, 0, 900, 900);
-  const img = new Image();
-  img.onload = () => {
-    ctx.drawImage(img, 0, 0, 900, 900);
-    const a = document.createElement('a');
-    a.download = 'fielding-plan.png';
-    a.href = canvas.toDataURL('image/png');
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-  img.src = url;
-}
-
-function printField() { window.print(); }
-
-// ─── Mobile UI ────────────────────────────────────────────────────────────────
-function isMobile() {
-  return window.innerWidth <= 1024;
-}
-
-function initMobileUI() {
-  if (!isMobile()) return;
-  
-  const leftPanel = document.querySelector('.left-panel');
-  if (leftPanel && !leftPanel.classList.contains('show')) {
-    leftPanel.classList.add('show');
-  }
-}
-
-function showMobileTab(tab) {
-  const leftPanel = document.querySelector('.left-panel');
-  const rightPanel = document.querySelector('.right-panel');
-  const buttons = document.querySelectorAll('.mobile-tab-btn');
-  
-  if (!leftPanel || !rightPanel) return;
-  
-  // Remove active class from all buttons
-  buttons.forEach(btn => btn.classList.remove('active'));
-  
-  // Hide all panels
-  leftPanel.classList.remove('show');
-  rightPanel.classList.remove('show');
-  
-  // Show selected tab and mark button as active
-  if (tab === 'squad') {
-    leftPanel.classList.add('show');
-    if (buttons[1]) buttons[1].classList.add('active');
-  } else if (tab === 'analytics') {
-    rightPanel.classList.add('show');
-    if (buttons[2]) buttons[2].classList.add('active');
-  } else {
-    // Field tab - just show the field
-    if (buttons[0]) buttons[0].classList.add('active');
-  }
-}
-
-// Initialize mobile UI on load and resize
-document.addEventListener('DOMContentLoaded', initMobileUI);
-window.addEventListener('resize', () => {
-  if (isMobile()) {
-    // Reinitialize on resize to mobile
-  } else {
-    // Reset to desktop when resizing to desktop
-    const leftPanel = document.querySelector('.left-panel');
-    const rightPanel = document.querySelector('.right-panel');
-    if (leftPanel) leftPanel.classList.remove('show');
-    if (rightPanel) rightPanel.classList.remove('show');
-  }
-});
+  initPositionOptions();
+  loadState();
+  renderPositionGuides();
+  updateWicketKeeperName();
+  updateBatsmenHands();
+  renderPlayers();
 </script>
 </body>
 </html>
