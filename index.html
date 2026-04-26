@@ -35,6 +35,7 @@
     font-family: "IBM Plex Sans", sans-serif;
     min-height: 100vh;
     padding: 18px;
+    -webkit-text-size-adjust: 100%;
   }
 
   .app {
@@ -43,6 +44,10 @@
     display: grid;
     grid-template-columns: 320px 1fr;
     gap: 16px;
+  }
+
+  section {
+    min-width: 0;
   }
 
   .panel {
@@ -85,6 +90,7 @@
     color: var(--text);
     font: inherit;
     padding: 10px 12px;
+    min-height: 44px;
   }
 
   input:focus,
@@ -192,15 +198,93 @@
     gap: 14px;
     color: var(--muted);
     font-size: 12px;
+    flex-wrap: wrap;
+    text-align: center;
   }
 
   @media (max-width: 980px) {
+    body {
+      padding: 12px;
+    }
+
     .app {
       grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .panel {
+      order: 2;
+      padding: 14px;
+    }
+
+    section {
+      order: 1;
     }
 
     .field-wrap {
       min-height: auto;
+      padding: 10px;
+    }
+
+    .field-svg {
+      width: min(94vw, 700px);
+      height: min(94vw, 700px);
+    }
+
+    .players {
+      max-height: 210px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    body {
+      padding: 10px;
+    }
+
+    .title {
+      font-size: 22px;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+
+    .panel {
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .row-2 {
+      grid-template-columns: 1fr;
+    }
+
+    input,
+    select,
+    button {
+      font-size: 16px;
+      min-height: 48px;
+      padding: 10px 12px;
+    }
+
+    .field-wrap {
+      border-radius: 10px;
+      padding: 8px;
+    }
+
+    .field-svg {
+      width: min(96vw, 560px);
+      height: min(96vw, 560px);
+      max-height: 74vh;
+    }
+
+    .legend {
+      font-size: 11px;
+      gap: 8px;
+    }
+
+    .players {
+      max-height: 180px;
     }
   }
 </style>
@@ -258,8 +342,8 @@
         <circle cx="350" cy="350" r="185" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-dasharray="8 7"/>
 
         <!-- Watermark -->
-        <text x="175" y="350" text-anchor="middle" dominant-baseline="central" font-size="70" font-family="'DM Serif Display', serif" fill="#ffffff" fill-opacity="0.08" transform="rotate(-90 175 350)" pointer-events="none">SPCC - Leg Side</text>
-        <text x="525" y="350" text-anchor="middle" dominant-baseline="central" font-size="70" font-family="'DM Serif Display', serif" fill="#ffffff" fill-opacity="0.08" transform="rotate(90 525 350)" pointer-events="none">SPCC - Off Side</text>
+        <text x="175" y="350" text-anchor="middle" dominant-baseline="central" font-size="70" font-family="'DM Serif Display', serif" fill="#ffffff" fill-opacity="0.08" transform="rotate(-90 175 350)" pointer-events="none">SPCC</text>
+        <text x="525" y="350" text-anchor="middle" dominant-baseline="central" font-size="70" font-family="'DM Serif Display', serif" fill="#ffffff" fill-opacity="0.08" transform="rotate(90 525 350)" pointer-events="none">SPCC</text>
 
         <rect x="331" y="248" width="38" height="204" rx="2" fill="#c5a26a" stroke="#8b6a37"/>
         <line x1="324" y1="285" x2="376" y2="285" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.8"/>
@@ -396,73 +480,69 @@
     `;
 
     let dragging = false;
+    let pointerId = null;
     let offsetX = 0;
     let offsetY = 0;
 
-    function dragStart(event) {
-      event.preventDefault();
-      dragging = true;
-
+    function toSvgPoint(clientX, clientY) {
       const svgRect = fieldSvg.getBoundingClientRect();
       const scaleX = 700 / svgRect.width;
       const scaleY = 700 / svgRect.height;
-      const isTouch = event.type.startsWith("touch");
+      return {
+        x: (clientX - svgRect.left) * scaleX,
+        y: (clientY - svgRect.top) * scaleY
+      };
+    }
 
-      const initialClientX = isTouch ? event.touches[0].clientX : event.clientX;
-      const initialClientY = isTouch ? event.touches[0].clientY : event.clientY;
+    function onPointerDown(event) {
+      event.preventDefault();
+      dragging = true;
+      pointerId = event.pointerId;
 
-      const initialMouseX = (initialClientX - svgRect.left) * scaleX;
-      const initialMouseY = (initialClientY - svgRect.top) * scaleY;
+      const p = toSvgPoint(event.clientX, event.clientY);
+      offsetX = player.x - p.x;
+      offsetY = player.y - p.y;
 
-      offsetX = player.x - initialMouseX;
-      offsetY = player.y - initialMouseY;
+      group.setPointerCapture(pointerId);
+      window.addEventListener("pointermove", onPointerMove, { passive: false });
+      window.addEventListener("pointerup", onPointerUp);
+      window.addEventListener("pointercancel", onPointerUp);
+    }
 
-      function onMove(moveEvent) {
-        if (!dragging) {
-          return;
-        }
+    function onPointerMove(event) {
+      if (!dragging || event.pointerId !== pointerId) {
+        return;
+      }
 
-        if (isTouch) {
-          moveEvent.preventDefault();
-        }
+      event.preventDefault();
+      const p = toSvgPoint(event.clientX, event.clientY);
+      const nextX = Math.round(p.x + offsetX);
+      const nextY = Math.round(p.y + offsetY);
+      const centerX = 350;
+      const centerY = 350;
+      const distance = Math.hypot(nextX - centerX, nextY - centerY);
 
-        const clientX = isTouch ? moveEvent.touches[0].clientX : moveEvent.clientX;
-        const clientY = isTouch ? moveEvent.touches[0].clientY : moveEvent.clientY;
-
-        const nextX = Math.round((clientX - svgRect.left) * scaleX + offsetX);
-        const nextY = Math.round((clientY - svgRect.top) * scaleY + offsetY);
-        const centerX = 350;
-        const centerY = 350;
-        const distance = Math.hypot(nextX - centerX, nextY - centerY);
-
-        if (distance <= 315) {
-          player.x = nextX;
-          player.y = nextY;
-        }
-
+      if (distance <= 315) {
+        player.x = nextX;
+        player.y = nextY;
         renderFieldTokens();
-      }
-
-      function onUp() {
-        dragging = false;
-        document.removeEventListener("mousemove", onMove);
-        document.removeEventListener("mouseup", onUp);
-        document.removeEventListener("touchmove", onMove);
-        document.removeEventListener("touchend", onUp);
-        saveState();
-      }
-
-      if (isTouch) {
-        document.addEventListener("touchmove", onMove, { passive: false });
-        document.addEventListener("touchend", onUp);
-      } else {
-        document.addEventListener("mousemove", onMove);
-        document.addEventListener("mouseup", onUp);
       }
     }
 
-    group.addEventListener("mousedown", dragStart);
-    group.addEventListener("touchstart", dragStart, { passive: false });
+    function onPointerUp(event) {
+      if (!dragging || event.pointerId !== pointerId) {
+        return;
+      }
+
+      dragging = false;
+      pointerId = null;
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerUp);
+      saveState();
+    }
+
+    group.addEventListener("pointerdown", onPointerDown);
 
     return group;
   }
