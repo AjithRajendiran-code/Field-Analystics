@@ -235,10 +235,6 @@
         <label for="playerName">Player Name</label>
         <input id="playerName" type="text" placeholder="Enter player name">
       </div>
-      <div>
-        <label for="playerPosition">Fielding Position</label>
-        <select id="playerPosition"></select>
-      </div>
       <button class="btn" id="addPlayerBtn">Add Player</button>
       <button class="btn" id="exportPngBtn">Export PNG</button>
       <button class="btn btn-danger" id="clearPlayersBtn">Clear All Players</button>
@@ -260,6 +256,9 @@
         <circle cx="350" cy="350" r="320" fill="url(#fieldGradient)" stroke="#84a78f" stroke-opacity="0.5" stroke-width="2"/>
         <circle cx="350" cy="350" r="185" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-dasharray="8 7"/>
 
+        <!-- Watermark -->
+        <text x="350" y="350" text-anchor="middle" dominant-baseline="central" font-size="64" font-family="'DM Serif Display', serif" fill="#ffffff" fill-opacity="0.05" pointer-events="none">Spartan CC</text>
+
         <rect x="331" y="248" width="38" height="204" rx="2" fill="#c5a26a" stroke="#8b6a37"/>
         <line x1="324" y1="285" x2="376" y2="285" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.8"/>
         <line x1="324" y1="415" x2="376" y2="415" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.8"/>
@@ -278,7 +277,6 @@
           <text x="350" y="508" text-anchor="middle" font-size="10" fill="#f8d98f" fill-opacity="0.8">(Fixed)</text>
         </g>
 
-        <g id="positionLabels"></g>
         <g id="fieldTokens"></g>
       </svg>
     </div>
@@ -291,37 +289,6 @@
 </div>
 
 <script>
-  const POSITIONS = {
-    "Slip": { x: 420, y: 455 },
-    "Second Slip": { x: 450, y: 430 },
-    "Gully": { x: 500, y: 390 },
-    "Point": { x: 525, y: 350 },
-    "Backward Point": { x: 540, y: 385 },
-    "Cover": { x: 500, y: 285 },
-    "Cover Point": { x: 475, y: 305 },
-    "Extra Cover": { x: 455, y: 260 },
-    "Mid Off": { x: 395, y: 220 },
-    "Long Off": { x: 440, y: 105 },
-    "Deep Cover": { x: 545, y: 200 },
-    "Third Man": { x: 460, y: 560 },
-    "Fine Third": { x: 420, y: 590 },
-    "Mid On": { x: 305, y: 220 },
-    "Long On": { x: 260, y: 105 },
-    "Mid Wicket": { x: 245, y: 280 },
-    "Square Leg": { x: 190, y: 350 },
-    "Backward Square Leg": { x: 175, y: 395 },
-    "Fine Leg": { x: 275, y: 555 },
-    "Deep Square Leg": { x: 120, y: 350 },
-    "Deep Mid Wicket": { x: 130, y: 230 },
-    "Leg Slip": { x: 300, y: 455 },
-    "Short Leg": { x: 305, y: 390 },
-    "Silly Point": { x: 395, y: 355 },
-    "Silly Mid On": { x: 320, y: 315 },
-    "Silly Mid Off": { x: 380, y: 315 },
-    "Short Cover": { x: 430, y: 300 },
-    "Short Fine Leg": { x: 300, y: 470 }
-  };
-
   let players = [];
   const STORAGE_KEY = "fielding_board_state_v1";
 
@@ -329,13 +296,11 @@
   const strikerHandSelect = document.getElementById("strikerHand");
   const nonStrikerHandSelect = document.getElementById("nonStrikerHand");
   const playerNameInput = document.getElementById("playerName");
-  const playerPositionSelect = document.getElementById("playerPosition");
   const addPlayerBtn = document.getElementById("addPlayerBtn");
   const exportPngBtn = document.getElementById("exportPngBtn");
   const clearPlayersBtn = document.getElementById("clearPlayersBtn");
   const playersList = document.getElementById("playersList");
   const fieldTokens = document.getElementById("fieldTokens");
-  const positionLabels = document.getElementById("positionLabels");
   const fieldSvg = document.getElementById("fieldSvg");
   const wkNameLabel = document.getElementById("wkNameLabel");
   const strikerHandLabel = document.getElementById("strikerHandLabel");
@@ -353,41 +318,17 @@
     saveState();
   }
 
-  function initPositionOptions() {
-    Object.keys(POSITIONS).forEach((position) => {
-      const option = document.createElement("option");
-      option.value = position;
-      option.textContent = position;
-      playerPositionSelect.appendChild(option);
-    });
-  }
-
-  function renderPositionGuides() {
-    positionLabels.innerHTML = "";
-    Object.entries(POSITIONS).forEach(([name, point]) => {
-      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      g.innerHTML = `
-        <circle cx="${point.x}" cy="${point.y}" r="3" fill="#d8ab2f" fill-opacity="0.55" />
-        <text x="${point.x}" y="${point.y - 8}" text-anchor="middle" font-size="8" fill="#dce8df" fill-opacity="0.75">${name}</text>
-      `;
-      positionLabels.appendChild(g);
-    });
-  }
-
   function addPlayer() {
     const name = playerNameInput.value.trim();
-    const position = playerPositionSelect.value;
-    if (!name || !position) {
+    if (!name) {
       return;
     }
 
-    const { x, y } = POSITIONS[position];
     players.push({
       id: Date.now() + Math.random(),
       name,
-      position,
-      x,
-      y
+      x: 350,
+      y: 190
     });
 
     playerNameInput.value = "";
@@ -421,7 +362,6 @@
       row.innerHTML = `
         <div>
           <div>${player.name}</div>
-          <div class="meta">${player.position}</div>
         </div>
         <button class="remove-btn" aria-label="Remove ${player.name}">x</button>
       `;
@@ -455,21 +395,29 @@
 
     let dragging = false;
 
-    group.addEventListener("mousedown", (event) => {
+    function dragStart(event) {
       event.preventDefault();
       dragging = true;
 
       const svgRect = fieldSvg.getBoundingClientRect();
       const scaleX = 700 / svgRect.width;
       const scaleY = 700 / svgRect.height;
+      const isTouch = event.type.startsWith("touch");
 
       function onMove(moveEvent) {
         if (!dragging) {
           return;
         }
 
-        const nextX = Math.round((moveEvent.clientX - svgRect.left) * scaleX);
-        const nextY = Math.round((moveEvent.clientY - svgRect.top) * scaleY);
+        if (isTouch) {
+          moveEvent.preventDefault();
+        }
+
+        const clientX = isTouch ? moveEvent.touches[0].clientX : moveEvent.clientX;
+        const clientY = isTouch ? moveEvent.touches[0].clientY : moveEvent.clientY;
+
+        const nextX = Math.round((clientX - svgRect.left) * scaleX);
+        const nextY = Math.round((clientY - svgRect.top) * scaleY);
         const centerX = 350;
         const centerY = 350;
         const distance = Math.hypot(nextX - centerX, nextY - centerY);
@@ -486,12 +434,22 @@
         dragging = false;
         document.removeEventListener("mousemove", onMove);
         document.removeEventListener("mouseup", onUp);
+        document.removeEventListener("touchmove", onMove);
+        document.removeEventListener("touchend", onUp);
         saveState();
       }
 
-      document.addEventListener("mousemove", onMove);
-      document.addEventListener("mouseup", onUp);
-    });
+      if (isTouch) {
+        document.addEventListener("touchmove", onMove, { passive: false });
+        document.addEventListener("touchend", onUp);
+      } else {
+        document.addEventListener("mousemove", onMove);
+        document.addEventListener("mouseup", onUp);
+      }
+    }
+
+    group.addEventListener("mousedown", dragStart);
+    group.addEventListener("touchstart", dragStart, { passive: false });
 
     return group;
   }
@@ -575,9 +533,7 @@
     }
   });
 
-  initPositionOptions();
   loadState();
-  renderPositionGuides();
   updateWicketKeeperName();
   updateBatsmenHands();
   renderPlayers();
